@@ -29,9 +29,9 @@ Set up AI-DLC in this project by doing the following:
    - Any other agent          → create `AGENTS.md`
 
 2. The file content should be:
-   When the user invokes AI-DLC, read and follow `.aidlc/aidlc-rules/core-workflow.md`
+   When the user invokes AI-DLC, read and follow `.aidlc/aidlc-rules-distilled/core-workflow.md`
    to start the workflow. All rule detail files referenced by the workflow are
-   located under `.aidlc/aidlc-rules/`.
+   located under `.aidlc/aidlc-rules-distilled/`.
 
 3. Add `.aidlc` to `.gitignore` unless I explicitly ask you not to.
 
