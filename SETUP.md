@@ -5,7 +5,7 @@
 Run this once in your project root:
 
 ```bash
-git submodule add https://github.com/aws-samples/aidlc-workflows .aidlc
+git submodule add https://github.com/DavidHache/aidlc-workflows .aidlc
 ```
 
 ## Step 2 — Paste this into your AI agent and let it do the rest
