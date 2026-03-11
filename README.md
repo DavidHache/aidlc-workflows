@@ -24,7 +24,7 @@ Setup takes two steps. See [SETUP.md](SETUP.md) for the full instructions.
 **Step 1** — Add AI-DLC as a submodule in your project root:
 
 ```bash
-git submodule add https://github.com/aws-samples/aidlc-workflows .aidlc
+git submodule add https://github.com/awslabs/aidlc-workflows.git .aidlc
 ```
 
 **Step 2** — Paste the prompt from [SETUP.md](SETUP.md) into your AI agent. It will create the right config file for your IDE and gitignore the submodule automatically.
@@ -86,7 +86,7 @@ Deployment and monitoring (future)
 
 ## Extensions
 
-AI-DLC supports an extension system that lets you layer additional rules on top of the core workflow. Extensions are markdown files organized under `aidlc-rules/extensions/` and are automatically loaded and enforced when enabled during the Requirements Analysis phase.
+AI-DLC supports an extension system that lets you layer additional rules on top of the core workflow. Extensions are markdown files organized under `aidlc-rules/aws-aidlc-rule-details/extensions/` and are automatically loaded and enforced when enabled during the Requirements Analysis phase.
 
 ### How Extensions Work
 
@@ -119,15 +119,16 @@ The workflow currently ships with a baseline security extension.
 
 ```
 aidlc-rules/
-└── extensions/
-    └── security/                      # Extension category
-        └── baseline/
-        │   └── security-baseline.md   # Baseline security rules
-        ├── compliance/                # Proposed folder hierarchy
-        │   ├── hipaa/                 # HIPAA compliance rules
-        │   ├── pci-dss/               # PCI-DSS compliance rules
-        │   └── soc2/                  # SOC 2 compliance rules
-        └── internal-policies/         # Your organization's custom rules
+└── aws-aidlc-rule-details/
+    └── extensions/
+        └── security/                      # Extension category
+            └── baseline/
+            │   └── security-baseline.md   # Baseline security rules
+            ├── compliance/                # Proposed folder hierarchy
+            │   ├── hipaa/                 # HIPAA compliance rules
+            │   ├── pci-dss/               # PCI-DSS compliance rules
+            │   └── soc2/                  # SOC 2 compliance rules
+            └── internal-policies/         # Your organization's custom rules
 ```
 
 ### Adding Your Own Extensions
@@ -200,10 +201,10 @@ After setup, confirm the `ai-dlc` steering/rules file is visible in your IDE:
 
 | Problem | Solution |
 |---------|----------|
-| Rules not loading | Verify the `ai-dlc` steering/rules file was created and points to `.aidlc/aidlc-rules/core-workflow.md` |
+| Rules not loading | Verify the `ai-dlc` steering/rules file was created and points to `.aidlc/aidlc-rules/aws-aidlc-rules/core-workflow.md` |
 | File encoding issues | Ensure files are UTF-8 encoded |
 | Rules not applied in session | Start a new chat session after file changes |
-| Rule details not loading | Verify `.aidlc/aidlc-rules/` exists with subdirectories (`common/`, `inception/`, etc.) |
+| Rule details not loading | Verify `.aidlc/aidlc-rules/aws-aidlc-rule-details/` exists with subdirectories (`common/`, `inception/`, etc.) |
 | Submodule directory empty | Run `git submodule update --init .aidlc` |
 
 ---

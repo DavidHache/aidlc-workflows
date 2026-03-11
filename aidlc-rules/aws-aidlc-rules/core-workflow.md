@@ -11,7 +11,13 @@ The AI model intelligently assesses what stages are needed based on:
 4. Risk and impact assessment
 
 ## MANDATORY: Rule Details Loading
-**CRITICAL**: When performing any phase, you MUST read and use relevant content from rule detail files. All rule detail files are located under `.aidlc/` (the submodule directory). All subsequent rule detail file references (e.g., `common/process-overview.md`, `inception/workspace-detection.md`) are relative to `.aidlc/`.
+**CRITICAL**: When performing any phase, you MUST read and use relevant content from rule detail files. Check these paths in order and use the first one that exists:
+- `.aidlc/aidlc-rules/aws-aidlc-rule-details/` (submodule setup)
+- `.aidlc-rule-details/` (Cursor, Cline, Claude Code, GitHub Copilot)
+- `.kiro/aws-aidlc-rule-details/` (Kiro IDE and CLI)
+- `.amazonq/aws-aidlc-rule-details/` (Amazon Q Developer)
+
+All subsequent rule detail file references (e.g., `common/process-overview.md`, `inception/workspace-detection.md`) are relative to whichever rule details directory was resolved above.
 
 **Common Rules**: ALWAYS load common rules at workflow start:
 - Load `common/process-overview.md` for workflow overview

@@ -5,7 +5,7 @@
 Run this once in your project root:
 
 ```bash
-git submodule add https://github.com/aws-samples/aidlc-workflows .aidlc
+git submodule add https://github.com/awslabs/aidlc-workflows.git .aidlc
 ```
 
 ## Step 2 — Paste this into your AI agent and let it do the rest
@@ -29,9 +29,8 @@ Set up AI-DLC in this project by doing the following:
    - Any other agent          → create `AGENTS.md`
 
 2. The file content should be:
-   When the user invokes AI-DLC, read and follow `.aidlc/aidlc-rules/core-workflow.md`
-   to start the workflow. All rule detail files referenced by the workflow are
-   located under `.aidlc/aidlc-rules/`.
+   When the user invokes AI-DLC, read and follow
+   `.aidlc/aidlc-rules/aws-aidlc-rules/core-workflow.md` to start the workflow.
 
 3. Add `.aidlc` to `.gitignore` unless I explicitly ask you not to.
 
