@@ -1,20 +1,21 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
-## [0.1.7] - 2026-03-06
+## [0.1.7] - 2026-03-11
 
 
 ### Features
 
-- agent-driven setup — flatten rules, drop the manual steps
-- flatten `aidlc-rules/` directory structure (remove `aws-aidlc-rule-details` and `aws-aidlc-rules` nesting)
-- add dedicated `SETUP.md` for streamlined setup instructions
+- agent-driven setup via `SETUP.md` — paste one prompt and let the agent configure your IDE
+- add submodule path as primary rule-details resolution in core-workflow.md, keeping legacy paths as fallbacks
 
 
 ### Documentation
 
-- simplify README by removing verbose manual setup instructions
-- update CONTRIBUTING.md
+- add dedicated `SETUP.md` with two-step setup instructions
+- replace verbose per-platform manual setup with a single prompt
+- remove manual setup instructions
+- add folder structure preservation guidance to CONTRIBUTING.md
 
 
 ### Miscellaneous
