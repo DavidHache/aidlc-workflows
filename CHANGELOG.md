@@ -1,6 +1,25 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [0.1.7] - 2026-03-06
+
+
+### Features
+
+- agent-driven setup — flatten rules, drop the manual steps
+- flatten `aidlc-rules/` directory structure (remove `aws-aidlc-rule-details` and `aws-aidlc-rules` nesting)
+- add dedicated `SETUP.md` for streamlined setup instructions
+
+
+### Documentation
+
+- simplify README by removing verbose manual setup instructions
+- update CONTRIBUTING.md
+
+
+### Miscellaneous
+
+- remove unused setup images from `assets/images/`
 ## [0.1.6] - 2026-03-05
 
 

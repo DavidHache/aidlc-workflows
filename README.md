@@ -11,6 +11,7 @@ AI-DLC is an intelligent software development workflow that adapts to your needs
 - [Extensions](#extensions)
 - [Tenets](#tenets)
 - [Prerequisites](#prerequisites)
+- [Verifying the Workflow Is Loaded](#verifying-the-workflow-is-loaded)
 - [Troubleshooting](#troubleshooting)
 - [Additional Resources](#additional-resources)
 
@@ -179,25 +180,31 @@ Have one of our supported platforms/tools for Assisted AI Coding installed:
 
 ---
 
+## Verifying the Workflow Is Loaded
+
+After setup, confirm the `ai-dlc` steering/rules file is visible in your IDE:
+
+| Platform | How to verify |
+|----------|---------------|
+| Kiro IDE | Open the Steering files panel and confirm `ai-dlc` appears under Workspace |
+| Kiro CLI | Run `/context show` and confirm `.kiro/steering/ai-dlc.md` is listed |
+| Amazon Q Developer | Click the **Rules** button in the Q Chat window and confirm `ai-dlc.md` is listed |
+| Cursor | Check **Settings → Rules** and confirm `ai-dlc` is listed and enabled |
+| Cline | Check the Rules popover under the chat input field |
+| Claude Code | Run `/config` or ask "What instructions are currently active?" |
+| GitHub Copilot | Select **Configure Chat → Chat Instructions** to verify |
+
+---
+
 ## Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
-| Rules not loading | Verify the IDE config file was created and points to `.aidlc/aidlc-rules/core-workflow.md` |
+| Rules not loading | Verify the `ai-dlc` steering/rules file was created and points to `.aidlc/aidlc-rules/core-workflow.md` |
 | File encoding issues | Ensure files are UTF-8 encoded |
 | Rules not applied in session | Start a new chat session after file changes |
 | Rule details not loading | Verify `.aidlc/aidlc-rules/` exists with subdirectories (`common/`, `inception/`, etc.) |
 | Submodule directory empty | Run `git submodule update --init .aidlc` |
-
-### Platform-Specific Notes
-
-- **Kiro** — Open the steering files panel and confirm `ai-dlc` appears under Workspace
-- **Kiro CLI** — Run `/context show` and confirm `.kiro/steering/ai-dlc.md` is listed
-- **Amazon Q** — Click the `Rules` button in the Q Chat window and confirm `ai-dlc.md` is listed
-- **Cursor** — Check **Settings → Rules** to confirm `ai-dlc` is listed and enabled
-- **Cline** — Check the Rules popover under the chat input field
-- **Claude Code** — Run `/config` or ask "What instructions are currently active?"
-- **GitHub Copilot** — Select **Configure Chat → Chat Instructions** to verify
 
 ---
 
