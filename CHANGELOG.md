@@ -1,6 +1,29 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [0.1.8] - 2026-03-12
+
+
+### Features
+
+- add distilled (AI-optimized) rule variants in `aidlc-rules-distilled/` for reduced token consumption (experimental)
+- add `DISTILLATION-INSTRUCTIONS.md` — comprehensive guide for producing and maintaining distilled rules
+
+
+### Documentation
+
+- add distillation section to README covering motivation, strategy, and benchmark results
+- update changelog for v0.1.8
+
+
+### Performance
+
+- distilled rules achieve 57.3% total token reduction (18.4M → 7.9M) in sci-calc benchmark
+- executor input tokens reduced 58.0% (9.2M → 3.9M)
+- max context size per invocation reduced 41.3% (141K → 83K tokens)
+- wall clock time reduced 19.7% (23.8m → 19.1m)
+- functional equivalence maintained: 100% unit tests (164/164), 88/88 contract tests, zero lint/security findings
+
 ## [0.1.7] - 2026-03-11
 
 

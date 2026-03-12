@@ -2,7 +2,12 @@
 
 ## What This Is
 
-`aidlc-rules-distilled/` contains AI-optimized compressed versions of the source rules in `aidlc-rules/`. Source files are the human-readable truth. Distilled files exist purely for AI context efficiency: same rules, fewer tokens.
+`aidlc-rules-distilled/` contains AI-optimized compressed versions of the source rules in `aidlc-rules/`. The source has two subdirectories:
+
+- `aidlc-rules/aws-aidlc-rules/` — the top-level orchestrator (`core-workflow.md`)
+- `aidlc-rules/aws-aidlc-rule-details/` — detailed phase rules (common, inception, construction, extensions, operations)
+
+The distilled output mirrors this structure. Source files are the human-readable truth. Distilled files exist purely for AI context efficiency: same rules, fewer tokens.
 
 Relationship is one-way: source → distilled. Never modify source files when editing distilled files.
 
@@ -45,15 +50,23 @@ Before finalizing any distilled file:
 
 ## Distilled File Organization
 
+The distilled output mirrors the two-level source structure:
+
 ```
 aidlc-rules-distilled/
-├── core-workflow.md                    # top-level orchestrator (distilled last)
-├── common/workflow-rules.md            # all common/ sources merged
-├── inception/inception-rules.md        # all inception/ sources merged
-├── construction/construction-rules.md  # all construction/ sources merged
-├── extensions/...                      # each extension standalone
-└── operations/...                      # standalone
+├── aws-aidlc-rules/
+│   └── core-workflow.md                    # from aidlc-rules/aws-aidlc-rules/core-workflow.md (distilled last)
+└── aws-aidlc-rule-details/
+    ├── common/workflow-rules.md            # all aws-aidlc-rule-details/common/ sources merged
+    ├── inception/inception-rules.md        # all aws-aidlc-rule-details/inception/ sources merged
+    ├── construction/construction-rules.md  # all aws-aidlc-rule-details/construction/ sources merged
+    ├── extensions/...                      # each extension standalone
+    └── operations/...                      # standalone
 ```
+
+Source → distilled path mapping:
+- `aidlc-rules/aws-aidlc-rules/core-workflow.md` → `aidlc-rules-distilled/aws-aidlc-rules/core-workflow.md`
+- `aidlc-rules/aws-aidlc-rule-details/{phase}/` → `aidlc-rules-distilled/aws-aidlc-rule-details/{phase}/`
 
 Merge strategy:
 - Same subdirectory, same phase → merge into one distilled file
@@ -77,9 +90,12 @@ Within each directory: runtime execution order.
 follow_order: each step builds on previous
 
 ### 1_SCAN
-- read ALL source files in `aidlc-rules/` recursively
-- group by directory (common, inception, construction, extensions/*, operations)
-- merge candidates: files in same dir serving same phase → single distilled file
+- read ALL source files in both source directories:
+  - `aidlc-rules/aws-aidlc-rules/` (core workflow orchestrator)
+  - `aidlc-rules/aws-aidlc-rule-details/` (detailed phase rules)
+- group `aws-aidlc-rule-details/` files by directory (common, inception, construction, extensions/*, operations)
+- `aws-aidlc-rules/core-workflow.md` is always standalone (distilled last)
+- merge candidates: files in same `aws-aidlc-rule-details/` subdir serving same phase → single distilled file
 - standalone candidates: cross-cutting extensions, placeholders, isolated files
 - extract output manifest: catalog every output file path, document template, required section header
 
@@ -126,7 +142,7 @@ Convert to structured notation:
 - sequences: `A → B → C`
 - conditional: `[COND]` or `condition→action`
 - required/mandatory: `[REQ]`
-- file references: `@filename` (relative to distilled root)
+- file references: `@filename` (relative to distilled root, respecting `aws-aidlc-rules/` and `aws-aidlc-rule-details/` prefixes)
 - OR: `A | B`, AND: `A & B`
 - unordered lists: comma-separated inline
 - ordered steps: `1. 2. 3.`
@@ -173,7 +189,7 @@ new_source_file_added:
 1. read new source file
 2. belongs in existing distilled file (new section) | needs own distilled file
 3. existing → full pipeline on new content, append as `## SECTION_NAME`
-4. new file → create `aidlc-rules-distilled/{folder}/{name}.md`, full pipeline
+4. new file → create `aidlc-rules-distilled/{aws-aidlc-rules|aws-aidlc-rule-details}/{folder}/{name}.md`, full pipeline
 5. extract new output artifact specs → add to output manifest
 6. run QUALITY_CHECK
 
