@@ -10,6 +10,7 @@ AI-DLC is an intelligent software development workflow that adapts to your needs
 - [Three-Phase Adaptive Workflow](#three-phase-adaptive-workflow)
 - [Key Features](#key-features)
 - [Extensions](#extensions)
+- [Experimental: Distilled Rules (Optimized for AI Agents)](#experimental-distilled-rules-optimized-for-ai-agents)
 - [Tenets](#tenets)
 - [Prerequisites](#prerequisites)
 - [Troubleshooting](#troubleshooting)
@@ -553,6 +554,112 @@ To add rules to an existing category (e.g., security):
 3. Rules are blocking by default — if verification criteria are not met, the stage cannot proceed until the finding is resolved.
 
 To create a new extension category, add a new directory under `extensions/` (e.g., `extensions/performance/`) and place your rule markdown files inside it following the same format.
+
+---
+
+## Experimental: Distilled Rules (Optimized for AI Agents)
+
+> ⚠️ **Experimental** — Distilled rules are a new optimization. They have been validated on a single benchmark (sci-calc) with Claude Opus 4.6. Results may vary across different models, project types, and complexity levels. Use the full rules if you need proven stability.
+
+The `aidlc-rules-distilled/` directory contains token-optimized versions of the full rules. They encode the same behavioral contract in fewer tokens, reducing context window usage and cost without sacrificing output quality.
+
+### Why Distill?
+
+AI-DLC rules are designed for human readability — they include rationale, examples, formatting, and explanations. AI agents don't need any of that. Distilled rules strip prose to terse imperative notation while preserving every output artifact specification, template, and behavioral constraint. The result: same outputs, significantly fewer tokens.
+
+### Strategy
+
+Distillation follows a structured pipeline defined in [`DISTILLATION-INSTRUCTIONS.md`](DISTILLATION-INSTRUCTIONS.md):
+
+1. Scan source rules and group by phase (common, inception, construction, operations, extensions)
+2. Merge files within the same phase into a single distilled file
+3. Deduplicate rules that appear in multiple places
+4. Reorder sections into runtime execution sequence
+5. Semantically compress prose to imperative `key: value` and `condition→action` notation
+6. Apply symbolic encoding (`→`, `[REQ]`, `@path` references)
+
+Output templates, file paths, and artifact specifications are preserved verbatim — only instructional prose is compressed.
+
+### Source of Truth
+
+The human-readable rules in `aidlc-rules/` are always the source of truth. Distilled files are derived artifacts — never edit them directly. When rules change, re-run the distillation process against the updated source to regenerate `aidlc-rules-distilled/`.
+
+The current distilled rules were produced using Claude Opus 4.6 following the pipeline in `DISTILLATION-INSTRUCTIONS.md`. You can re-run distillation after any rule update, or substitute a different LLM for the distillation pass — the instructions are model-agnostic.
+
+### Benchmark Results
+
+Evaluated on the `sci-calc` benchmark (Scientific Calculator API) using Claude Opus 4.6:
+
+| Metric | Full Rules | Distilled Rules | Delta |
+|--------|----------:|----------------:|------:|
+| Total Tokens | 18.4M | 7.9M | -57.3% |
+| Executor Input Tokens | 9.2M | 3.9M | -58.0% |
+| Max Context Size | 141K | 83K | -41.3% |
+| Wall Clock Time | 23.8m | 19.1m | -19.7% |
+| Unit Tests | 100% (164/164) | 100% (164/164) | = |
+| Contract Tests | 88/88 | 88/88 | = |
+| Lint/Security | 0 findings | 0 findings | = |
+| Qualitative Score | 0.854 | 0.798 | -6.6% |
+
+Functional correctness is fully preserved. The qualitative score dip is primarily in construction-phase documentation detail (build instructions, test instructions) — the generated code and tests are equivalent.
+
+### Setup: Distilled Rules via Submodule
+
+If you already have AI-DLC as a submodule (`.aidlc/`), paste this prompt into your AI agent to switch to distilled rules:
+
+```
+Set up AI-DLC distilled rules in this project by doing the following:
+
+1. Create the appropriate rules/steering file for your IDE using the options below.
+   Pick the one that matches the agent you are running in:
+
+   - Kiro IDE or Kiro CLI     → create `.kiro/steering/ai-dlc.md`
+   - Amazon Q Developer       → create `.amazonq/rules/ai-dlc.md`
+   - Antigravity              → create `.agent/rules/ai-dlc.md`
+   - Cursor                   → create `.cursor/rules/ai-dlc.mdc` with frontmatter:
+                                  ---
+                                  description: "AI-DLC workflow (distilled)"
+                                  alwaysApply: true
+                                  ---
+   - Cline                    → create `.clinerules/ai-dlc.md`
+   - Claude Code              → create `CLAUDE.md`
+   - GitHub Copilot           → create `.github/copilot-instructions.md`
+   - Any other agent          → create `AGENTS.md`
+
+2. The file content should be:
+   When the user invokes AI-DLC, read and follow
+   `.aidlc/aidlc-rules-distilled/aws-aidlc-rules/core-workflow.md` to start the workflow.
+
+3. Add `.aidlc` to `.gitignore` unless I explicitly ask you not to.
+
+4. Confirm what file you created and that `.aidlc` is gitignored.
+```
+
+### Setup: Distilled Rules via Manual Download
+
+If you prefer manual setup from the release zip, use `aidlc-rules-distilled/` instead of `aidlc-rules/` in the platform-specific commands. For example, on Kiro (macOS/Linux):
+
+```bash
+mkdir -p .kiro/steering
+cp -R ~/Downloads/aidlc-rules-distilled/aws-aidlc-rules .kiro/steering/
+cp -R ~/Downloads/aidlc-rules-distilled/aws-aidlc-rule-details .kiro/
+```
+
+The same substitution applies to all other platforms — replace every `aidlc-rules/` path with `aidlc-rules-distilled/` in the [Platform-Specific Setup](#platform-specific-setup) instructions.
+
+### Distilled Directory Structure
+
+```
+aidlc-rules-distilled/
+├── aws-aidlc-rules/
+│   └── core-workflow.md
+└── aws-aidlc-rule-details/
+    ├── common/workflow-rules.md
+    ├── inception/inception-rules.md
+    ├── construction/construction-rules.md
+    ├── extensions/security/...
+    └── operations/operations.md
+```
 
 ---
 
