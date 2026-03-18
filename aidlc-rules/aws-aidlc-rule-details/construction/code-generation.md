@@ -26,7 +26,7 @@ This stage generates code for each unit of work through two integrated parts:
 ## Step 2: Create Detailed Unit Code Generation Plan
 - [ ] Read workspace root and project type from `aidlc-docs/aidlc-state.md`
 - [ ] Determine code location (see Critical Rules for structure patterns)
-- [ ] **Brownfield only**: Review reverse engineering code-structure.md for existing files to modify
+- [ ] **Brownfield only**: Review reverse engineering `code-structure.md` for existing files to modify, `component-inventory.md` for cross-cutting components and code conventions that MUST be followed, and `architecture.md` Runtime Topology for concurrency constraints
 - [ ] Document exact paths (never aidlc-docs/)
 - [ ] Create explicit steps for unit generation:
   - Project Structure Setup (greenfield only)
@@ -187,6 +187,13 @@ This stage generates code for each unit of work through two integrated parts:
 - If exists: Modify in-place (never create copies like `ClassName_modified.java`)
 - If doesn't exist: Create new file
 - Verify no duplicate files after generation (Step 12)
+
+### Brownfield Convention Compliance (MANDATORY)
+- **BEFORE creating any new class/component**: Check `component-inventory.md` Cross-Cutting Components and `code-structure.md` for existing implementations. Extend existing components rather than creating parallel ones
+- **Cross-cutting concerns** (audit, logging, auth, error handling, config, health checks, metrics, validation, DTO mapping) MUST use existing implementations
+- **Follow Discovered Code Conventions** from `component-inventory.md`: all conventions documented during reverse engineering
+- **Follow Discovered Runtime Conventions** from `architecture.md`: all runtime patterns documented during reverse engineering
+- **Justify new components**: If creating a component in a domain where one exists, the plan must include explicit justification
 
 ### Planning Phase Rules
 - Create explicit, numbered steps for all generation activities

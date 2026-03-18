@@ -26,6 +26,7 @@ Design detailed business logic for the unit, technology-agnostic and focused pur
 - Read unit definition from `aidlc-docs/inception/application-design/unit-of-work.md`
 - Read assigned stories from `aidlc-docs/inception/application-design/unit-of-work-story-map.md`
 - Understand unit responsibilities and boundaries
+- **Brownfield**: Load from reverse engineering: `architecture.md` (Runtime Topology, Discovered Runtime Conventions) and `component-inventory.md` (Cross-Cutting Components, Discovered Code Conventions) — these are constraints on the functional design
 
 ### Step 2: Create Functional Design Plan
 - Generate plan with checkboxes [] for functional design

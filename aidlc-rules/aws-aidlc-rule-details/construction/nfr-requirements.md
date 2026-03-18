@@ -13,6 +13,7 @@ Determine non-functional requirements for the unit and make tech stack choices.
 ### Step 1: Analyze Functional Design
 - Read functional design artifacts from `aidlc-docs/construction/{unit-name}/functional-design/`
 - Understand business logic complexity and requirements
+- **Brownfield**: Load `architecture.md` (Runtime Topology and Constraints, Discovered Runtime Conventions) and `component-inventory.md` (Cross-Cutting Components, Discovered Code Conventions) from reverse engineering — these directly inform NFR requirements
 
 ### Step 2: Create NFR Requirements Plan
 - Generate plan with checkboxes [] for NFR assessment
@@ -36,6 +37,7 @@ Determine non-functional requirements for the unit and make tech stack choices.
 - **Security Requirements** - Ask about data protection, compliance, authentication, authorization, and threat models
 - **Tech Stack Selection** - Ask about technology preferences, constraints, existing systems, and integration requirements
 - **Reliability Requirements** - Ask about error handling, fault tolerance, monitoring, and alerting needs
+- **Brownfield Runtime Constraints** (MANDATORY for brownfield) - Cross-reference the **Runtime Topology and Constraints** and **Discovered Runtime Conventions** sections from reverse engineering `architecture.md`, and the **Cross-Cutting Components** and **Discovered Code Conventions** from `component-inventory.md`. For each discovered convention, ask whether the new unit's requirements introduce any conflicts, gaps, or additional needs. Also probe for constraints the reverse engineering may have missed given the unit's specific scope
 - **Maintainability Requirements** - Ask about code quality, documentation, testing, and operational requirements
 - **Usability Requirements** - Ask about user experience, accessibility, and interface requirements
 

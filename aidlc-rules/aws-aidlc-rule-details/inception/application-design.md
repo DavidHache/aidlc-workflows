@@ -23,6 +23,13 @@ Application Design focuses on:
 - Read `aidlc-docs/inception/requirements/requirements.md` and `aidlc-docs/inception/user-stories/stories.md`
 - Identify key business capabilities and functional areas
 - Determine design scope and complexity
+- **Brownfield**: Load `component-inventory.md` and `architecture.md` from reverse engineering
+
+### 1.1 Brownfield Reuse Analysis (MANDATORY for Brownfield)
+Before designing new components:
+- Review **Cross-Cutting Components** and **Discovered Code Conventions** from `component-inventory.md`
+- **REUSE-FIRST**: For each capability needed, check if an existing component provides it or can be extended. Only create new components when existing ones cannot reasonably serve the purpose
+- Document reuse decisions in the design plan: which existing components will be extended vs which new components are needed (with justification)
 
 ### 2. Create Application Design Plan
 - Generate plan with checkboxes [] for application design

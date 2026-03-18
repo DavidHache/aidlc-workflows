@@ -96,6 +96,21 @@ Create `aidlc-docs/inception/reverse-engineering/architecture.md`:
 - **CDK Stacks**: [List with purposes]
 - **Deployment Model**: [Description]
 - **Networking**: [VPC, subnets, security groups]
+
+## Runtime Topology and Constraints
+Analyze the deployment infrastructure to document how the system runs in production.
+- **Deployment Model**: [Discovered deployment type and orchestration]
+- **Replica/Instance Count**: [Number of concurrent instances]
+- **Scaling Model**: [Discovered scaling approach]
+- **State Management**: [Stateless/Stateful, session handling]
+- **Shared Resources**: [Resources shared across instances]
+- **Concurrency Risks**: [Discovered contention risks, locking strategies, idempotency patterns]
+
+### Discovered Runtime Conventions
+**DIRECTIVE**: Analyze the codebase to identify ALL runtime conventions, cross-cutting patterns, and operational constraints that new code must conform to. Document each convention you discover with: (1) what it is, (2) where it's implemented, (3) how new code must integrate with it. Only document conventions that actually exist in the codebase — do not create placeholder entries for conventions that don't exist.
+
+Use the following as seed categories to guide discovery, but do not limit yourself to them. If the codebase reveals conventions not listed here, document those too:
+- Transaction management, caching, event/message patterns, rate limiting, configuration management, observability (logging/tracing/metrics), scheduled jobs, multi-tenancy, internationalization, connection pooling, circuit breakers, feature flags, retry policies, secret management
 ```
 
 ## Step 3: Generate Code Structure Documentation
@@ -177,6 +192,16 @@ Create `aidlc-docs/inception/reverse-engineering/component-inventory.md`:
 
 ## Test Packages
 - [Package name] - [Integration/Load/Unit] - [Purpose]
+
+## Cross-Cutting Components
+**DIRECTIVE**: Identify ALL components that provide shared functionality across the system. These MUST be reused by new code, never duplicated. For each, document: component name, purpose, location, and current consumers.
+
+Seed categories to guide discovery (do not limit to these): audit/logging, auth/authz, error handling, configuration, health checks, metrics, DTO/model mapping, data validation, database migration, API versioning, test utilities/fixtures
+
+## Discovered Code Conventions
+**DIRECTIVE**: Analyze the codebase to identify ALL coding conventions and patterns that new code must follow. Document each convention you discover with: (1) what the convention is, (2) where it's enforced or implemented, (3) what new code must do to comply. Only document conventions that actually exist — do not create placeholder entries.
+
+Seed categories to guide discovery (do not limit to these): error handling patterns, data validation layer, DTO/model mapping approach, database migration tooling, API versioning scheme, test infrastructure and fixtures, CI/CD pipeline constraints, connection pooling configuration
 
 ## Total Count
 - **Total Packages**: [Number]
