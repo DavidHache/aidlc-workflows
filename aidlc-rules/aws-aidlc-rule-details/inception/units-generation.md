@@ -30,6 +30,7 @@ This stage decomposes the system into manageable units of work through two integ
 - [ ] Generate `aidlc-docs/inception/application-design/unit-of-work.md` with unit definitions and responsibilities
 - [ ] Generate `aidlc-docs/inception/application-design/unit-of-work-dependency.md` with dependency matrix
 - [ ] Generate `aidlc-docs/inception/application-design/unit-of-work-story-map.md` mapping stories to units
+- [ ] Generate `aidlc-docs/inception/application-design/unit-of-work-parallel-execution.md` with parallel execution groups (see Parallel Execution Planning below)
 - [ ] **Greenfield only**: Document code organization strategy in `unit-of-work.md` (see code-generation.md for structure patterns)
 - [ ] Validate unit boundaries and dependencies
 - [ ] Ensure all stories are assigned to units
@@ -180,4 +181,106 @@ If the analysis in step 7 reveals ANY ambiguous answers, you MUST:
   - `unit-of-work.md` with unit definitions
   - `unit-of-work-dependency.md` with dependency matrix
   - `unit-of-work-story-map.md` with story mappings
+  - `unit-of-work-parallel-execution.md` with parallel execution groups
 - Units verified and ready for per-unit design stages
+- Parallel execution groups validated (no circular dependencies within groups)
+
+---
+
+## Parallel Execution Planning
+
+### Purpose
+When multiple units of work exist, analyze the dependency graph to determine which units can be developed in parallel by independent subagents without conflicts. This enables concurrent construction while preventing file collisions, contract violations, and integration failures.
+
+### Grouping Scheme
+
+Units are organized into lettered parallel execution groups. Within each group, units are numbered. Groups execute sequentially (Group A completes before Group B starts). Units within the same group execute in parallel.
+
+**Format**: `Group {Letter}.{Number} - {unit-name}`
+
+**Example**:
+```markdown
+## Parallel Execution Groups
+
+### Group A (no dependencies — can start immediately)
+- A.1 - user-auth-service
+- A.2 - notification-service
+- A.3 - static-content-module
+
+### Group B (depends on Group A completion)
+- B.1 - order-processing-service (depends on A.1)
+- B.2 - payment-service (depends on A.1)
+
+### Group C (depends on Group B completion)
+- C.1 - reporting-service (depends on B.1, B.2)
+```
+
+### Dependency Analysis Rules
+
+1. **Build the dependency graph** from `unit-of-work-dependency.md`
+2. **Identify root units** — units with no dependencies on other units → these form Group A
+3. **Topological sort** — assign subsequent groups based on dependency depth:
+   - Group A: depth 0 (no unit dependencies)
+   - Group B: depth 1 (depends only on Group A units)
+   - Group C: depth 2 (depends on Group B or earlier units)
+   - Continue lettering for deeper dependency chains
+4. **Validate**: no circular dependencies exist; every unit is assigned exactly one group
+
+### Inter-Unit Contract Definitions
+
+Before parallel execution begins, contracts between units MUST be defined and locked. These contracts are the integration boundaries that subagents code against independently.
+
+Generate `aidlc-docs/inception/application-design/unit-contracts.md` containing:
+
+```markdown
+## Inter-Unit Contracts
+
+### Contract: {provider-unit} → {consumer-unit}
+- **Contract ID**: C-{number}
+- **Type**: API / Event / Shared Model / Database View
+- **Provider**: {unit-name} (Group {Letter}.{Number})
+- **Consumer(s)**: {unit-name(s)}
+- **Interface Definition**:
+  - Endpoint / Event name / Model schema
+  - Input types
+  - Output types
+  - Error types
+- **Stability**: LOCKED (do not modify without re-approval)
+```
+
+**Rules**:
+- Contracts MUST be defined for every edge in the dependency graph
+- Contracts are LOCKED after user approval — subagents code against them, not around them
+- If a subagent discovers a contract needs to change, it MUST stop and escalate to the orchestrator for re-approval
+- Provider units MUST implement the contract interface exactly as defined
+- Consumer units MUST code against the contract interface, not the provider's internals
+
+### File Ownership Matrix
+
+Generate a file ownership section in `unit-of-work-parallel-execution.md` that maps directories and files to their owning unit:
+
+```markdown
+## File Ownership
+
+| Path Pattern | Owner Unit | Access |
+|---|---|---|
+| `src/auth/**` | A.1 - user-auth-service | EXCLUSIVE |
+| `src/notifications/**` | A.2 - notification-service | EXCLUSIVE |
+| `src/shared/models/user.ts` | A.1 - user-auth-service | PROVIDER |
+| `src/shared/models/user.ts` | B.1 - order-processing-service | READ-ONLY |
+| `src/shared/contracts/**` | ORCHESTRATOR | READ-ONLY (all units) |
+```
+
+**Access levels**:
+- **EXCLUSIVE**: Only the owning unit's subagent may create or modify files in this path
+- **PROVIDER**: The owning unit creates and maintains the file; other units may read but not modify
+- **READ-ONLY**: The unit may import/reference but never modify
+- **ORCHESTRATOR**: Managed by the orchestrating agent, not by any subagent
+
+### Shared Resource Rules
+
+When units share resources (database, message bus, config files):
+1. **Shared models**: Defined in contracts, owned by the provider unit, read-only for consumers
+2. **Database migrations**: Each unit owns its own tables/schemas; shared tables require a designated owner unit
+3. **Configuration files**: Root-level config (e.g., `package.json`, `docker-compose.yml`) is ORCHESTRATOR-owned — subagents propose changes, orchestrator applies them
+4. **Build artifacts**: Each unit manages its own build; integration build is ORCHESTRATOR-owned

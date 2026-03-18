@@ -282,8 +282,11 @@ All subsequent rule detail file references (e.g., `common/process-overview.md`, 
 2. Load all steps from `inception/units-generation.md`
 3. Load reverse engineering artifacts (if brownfield)
 4. Execute at appropriate depth (minimal/standard/comprehensive)
-5. **Wait for Explicit Approval**: Present detailed completion message (see units-generation.md for message format) - DO NOT PROCEED until user confirms
-6. **MANDATORY**: Log user's response in audit.md with complete raw input
+5. **MANDATORY**: Generate parallel execution groups in `unit-of-work-parallel-execution.md` (see Parallel Execution Planning in units-generation.md)
+6. **MANDATORY**: Generate inter-unit contracts in `unit-contracts.md` for every dependency edge
+7. **MANDATORY**: Generate file ownership matrix in `unit-of-work-parallel-execution.md`
+8. **Wait for Explicit Approval**: Present detailed completion message (see units-generation.md for message format) - DO NOT PROCEED until user confirms
+9. **MANDATORY**: Log user's response in audit.md with complete raw input
 
 ---
 
@@ -294,7 +297,7 @@ All subsequent rule detail file references (e.g., `common/process-overview.md`, 
 **Focus**: Determine HOW to build it
 
 **Stages in CONSTRUCTION PHASE**:
-- Per-Unit Loop (executes for each unit):
+- Per-Unit Loop (executes for each unit, parallelized by group when multiple units exist):
   - Functional Design (CONDITIONAL, per-unit)
   - NFR Requirements (CONDITIONAL, per-unit)
   - NFR Design (CONDITIONAL, per-unit)
@@ -302,11 +305,49 @@ All subsequent rule detail file references (e.g., `common/process-overview.md`, 
   - Code Generation (ALWAYS, per-unit)
 - Build and Test (ALWAYS - after all units complete)
 
-**Note**: Each unit is completed fully (design + code) before moving to the next unit.
+**Parallel Execution**: When `unit-of-work-parallel-execution.md` exists, units within the same lettered group (A, B, C...) are delegated to independent subagents and executed in parallel. Groups execute sequentially. See Per-Unit Loop for orchestration rules.
+
+**Note**: Each unit is completed fully (design + code) before moving to the next unit. Units within the same parallel group are completed concurrently by separate subagents.
 
 ---
 
 ## Per-Unit Loop (Executes for Each Unit)
+
+### Parallel Execution Model
+
+When multiple units of work exist and `unit-of-work-parallel-execution.md` defines parallel execution groups, the Construction Phase uses a group-based parallel execution model with subagent delegation.
+
+**Orchestration Rules**:
+
+1. **Group-sequential, unit-parallel**: Execute groups in letter order (A → B → C → ...). Within each group, delegate units to independent subagents that work in parallel.
+2. **Pre-flight checks before each group**:
+   - Verify all dependency groups are complete
+   - Verify inter-unit contracts from `unit-contracts.md` are locked and available
+   - Verify file ownership matrix is loaded and enforced
+3. **Subagent delegation**: Each unit within a parallel group is assigned to its own subagent. The subagent receives:
+   - The unit's design artifacts (functional design, NFR, infrastructure)
+   - The locked inter-unit contracts relevant to this unit
+   - The file ownership matrix (subagent MUST respect EXCLUSIVE/PROVIDER/READ-ONLY boundaries)
+   - The unit's story map subset
+4. **Subagent boundaries** — each subagent MUST:
+   - Only create/modify files within its EXCLUSIVE ownership paths
+   - Implement provider contracts exactly as defined (no deviations)
+   - Code against consumer contracts as interfaces (no reaching into provider internals)
+   - NOT modify ORCHESTRATOR-owned files (propose changes instead)
+   - NOT modify files owned by other units
+5. **Conflict escalation**: If a subagent discovers it needs to:
+   - Modify a file outside its ownership → STOP and escalate to orchestrator
+   - Change a locked contract → STOP and escalate to orchestrator for re-approval
+   - Depend on a unit in a later group → STOP and escalate (indicates dependency graph error)
+6. **Group completion gate**: ALL units in a group must complete and pass approval before the next group starts. The orchestrator:
+   - Collects results from all subagents in the group
+   - Validates no file conflicts occurred
+   - Validates contract implementations match contract definitions
+   - Applies any ORCHESTRATOR-owned file changes (build configs, shared configs)
+   - Presents group completion to user for approval
+7. **Fallback to sequential**: If the IDE/tool does not support subagent parallelism, execute units within each group sequentially while still respecting group ordering and file ownership rules.
+
+**Single-unit projects**: Skip parallel orchestration entirely. Execute the standard per-unit loop below.
 
 **For each unit of work, execute the following stages in sequence:**
 
@@ -518,6 +559,8 @@ The Operations stage will eventually include:
 │   │   ├── requirements/
 │   │   ├── user-stories/
 │   │   └── application-design/
+│   │       ├── unit-of-work-parallel-execution.md  # Parallel groups, file ownership matrix
+│   │       └── unit-contracts.md                   # Locked inter-unit contracts
 │   ├── construction/               # 🟢 CONSTRUCTION PHASE
 │   │   ├── plans/
 │   │   ├── {unit-name}/
