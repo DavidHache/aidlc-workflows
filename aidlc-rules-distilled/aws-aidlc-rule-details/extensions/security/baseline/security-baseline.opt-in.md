@@ -1,6 +1,8 @@
-## SECURITY_BASELINE_OPT_IN
+# SECURITY_BASELINE_OPT_IN
 
 Extension: Security Baseline
+
+## Opt-In Prompt
 
 Auto-included in Requirements Analysis clarifying questions when extension loaded:
 

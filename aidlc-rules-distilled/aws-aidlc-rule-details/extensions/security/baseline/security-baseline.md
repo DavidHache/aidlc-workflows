@@ -1,62 +1,42 @@
-## SECURITY_BASELINE_RULES
+# BASELINE SECURITY RULES
 
-Cross-cutting constraints. Apply across all AI-DLC phases. Hard constraints, not guidance.
+## OVERVIEW
 
-## BLOCKING_FINDING_BEHAVIOR
+Cross-cutting MANDATORY constraints across all AI-DLC phases. Hard constraints, not guidance.
 
-blocking finding:
-1. List in stage completion under "Security Findings" with SECURITY rule ID + description
-2. Do NOT present "Continue to Next Stage" until all blocking findings resolved
+Enforcement: verify compliance before presenting stage completion message.
+
+Blocking finding behavior:
+1. List finding in stage completion under "Security Findings" with SECURITY rule ID + description
+2. [REQ] DO NOT present "Continue to Next Stage" until all blocking findings resolved
 3. Present only "Request Changes" with explanation
-4. Log in `aidlc-docs/audit.md` with SECURITY rule ID, description, stage context
+4. Log in `aidlc-docs/audit.md` with rule ID, description, stage context
 
-not-applicable rule (e.g., SECURITY-01 when no data stores) → mark N/A in compliance summary, not blocking
+N/A rule (e.g., SECURITY-01 when no data stores) → mark N/A in compliance summary, not blocking.
 
-All rules blocking by default. Verification criteria not met → blocking finding.
+All rules blocking by default. Verification items are compliance checks (not `- [ ]` checkboxes).
 
-Verification items: plain bullet compliance checks (distinct from `- [ ]`/`- [x]` progress checkboxes).
+## SECURITY-01: Encryption at Rest and in Transit
 
-## SECURITY-01: ENCRYPTION_AT_REST_AND_IN_TRANSIT
+Rule: every data store (DB, object storage, file systems, caches) MUST have encryption at rest (managed/customer keys) + encryption in transit (TLS 1.2+).
 
-[REQ] Every data persistence store (databases, object storage, file systems, caches):
-- Encryption at rest: managed key service or customer-managed keys
-- Encryption in transit: TLS 1.2+ for all data movement
+Verification: no storage without encryption config; no unencrypted DB connection strings; object storage enforces encryption + rejects non-TLS; DB instances have storage encryption + enforce TLS.
 
-Verification:
-- No storage resource without encryption configuration
-- No unencrypted database connection protocol
-- Object storage enforces encryption at rest, rejects non-TLS via policy
-- Database instances: storage encryption enabled, TLS enforced
+## SECURITY-02: Access Logging on Network Intermediaries
 
-## SECURITY-02: ACCESS_LOGGING_NETWORK_INTERMEDIARIES
+Rule: every network-facing intermediary handling external traffic MUST have access logging. Load balancers → access logs; API gateways → execution + access logging; CDN → standard/real-time logs.
 
-[REQ] Every network-facing intermediary handling external traffic:
-- Load balancers → access logs to persistent store
-- API gateways → execution + access logging to centralized log service
-- CDN distributions → standard or real-time logs
+Verification: no LB without access logging; no API gateway stage without access logging; no CDN without logging config.
 
-Verification:
-- No load balancer without access logging
-- No API gateway stage without access logging
-- No CDN distribution without logging configuration
+## SECURITY-03: Application-Level Logging
 
-## SECURITY-03: APPLICATION_LEVEL_LOGGING
+Rule: every deployed component MUST have structured logging: configured framework, output to centralized log service, include timestamp + correlation/request ID + log level + message. Sensitive data (passwords, tokens, PII) MUST NOT appear in logs.
 
-[REQ] Every deployed application component:
-- Logging framework configured
-- Output to centralized log service
-- Include: timestamp, correlation/request ID, log level, message
-- Sensitive data (passwords, tokens, PII) MUST NOT appear in logs
+Verification: every entry point has configured logger; no ad-hoc logging as primary mechanism; log config routes to centralized service; no secrets/tokens/PII logged.
 
-Verification:
-- Every service/function entry point has configured logger
-- No ad-hoc logging as primary mechanism in production
-- Log config routes to centralized service
-- No secrets/tokens/PII logged
+## SECURITY-04: HTTP Security Headers for Web Applications
 
-## SECURITY-04: HTTP_SECURITY_HEADERS
-
-[REQ] All HTML-serving endpoints set these headers:
+Rule: required headers on all HTML-serving endpoints:
 
 | Header | Required Value |
 |---|---|
@@ -66,190 +46,79 @@ Verification:
 | `X-Frame-Options` | `DENY` (or `SAMEORIGIN` if framing required) |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` |
 
-`X-XSS-Protection` deprecated. Use CSP instead.
+`X-XSS-Protection` deprecated; use CSP instead.
 
-Verification:
-- Middleware/interceptor sets all required headers
-- CSP: no `unsafe-inline`/`unsafe-eval` without documented justification
-- HSTS max-age >= 31536000
+Verification: middleware/interceptor sets all headers; CSP no `unsafe-inline`/`unsafe-eval` without documented justification; HSTS max-age >= 31536000.
 
-## SECURITY-05: INPUT_VALIDATION
+## SECURITY-05: Input Validation on All API Parameters
 
-[REQ] Every API endpoint (REST, GraphQL, gRPC, WebSocket) validates all input:
-- Type checking: reject unexpected types
-- Length/size bounds: max lengths on strings, max sizes on arrays/payloads
-- Format validation: allowlists (regex/schema) for structured inputs
-- Sanitization: escape/reject HTML/script in user strings (XSS prevention)
-- Injection prevention: parameterized queries only (never string concatenation)
+Rule: every API endpoint (REST, GraphQL, gRPC, WebSocket) MUST validate all input: type checking, length/size bounds, format validation (allowlists), sanitization (escape/reject HTML/script), injection prevention (parameterized queries only).
 
-Verification:
-- Every API handler uses validation library/schema
-- No raw user input concatenated into SQL/NoSQL/OS commands
-- String inputs have explicit max-length
-- Request body size limits configured
+Verification: every handler uses validation library/schema; no raw input concatenated into SQL/NoSQL/OS commands; string inputs have max-length; request body size limits configured.
 
-## SECURITY-06: LEAST_PRIVILEGE_ACCESS
+## SECURITY-06: Least-Privilege Access Policies
 
-[REQ] Every IAM policy/role/permission boundary:
-- Specific resource identifiers (no wildcard resources unless API lacks resource-level permissions — document exception)
-- Specific actions (no wildcard actions)
-- Scope conditions where possible
-- Separate read/write into distinct statements
+Rule: every IAM policy/role/permission MUST follow least privilege: specific resource IDs (no wildcard unless API lacks resource-level permissions — document exception), specific actions (no wildcard), scoped conditions, separate read/write statements.
 
-Verification:
-- No wildcard actions/resources without documented exception
-- No role with broader permissions than actual calls
-- Prefer managed policies over inline
-- Trust policy scoped to specific service/account
+Verification: no wildcard actions/resources without documented exception; no over-broad service roles; managed policies preferred; trust policies scoped to specific service/account.
 
-## SECURITY-07: RESTRICTIVE_NETWORK_CONFIG
+## SECURITY-07: Restrictive Network Configuration
 
-[REQ] All network configs (security groups, NACLs, route tables) deny-by-default:
-- Only open specific required ports
-- No inbound `0.0.0.0/0` except public LB on 80/443
-- No outbound `0.0.0.0/0` all ports without justification
-- Private subnets: no direct internet gateway routes
-- Use private endpoints for cloud service access where available
+Rule: all network configs (security groups, NACLs, route tables) MUST follow deny-by-default: only required ports open; no inbound `0.0.0.0/0` except public LB on 80/443; no outbound `0.0.0.0/0` all ports without justification; private subnets no direct IGW routes; use private endpoints where available.
 
-Verification:
-- No inbound `0.0.0.0/0` on any port other than 80/443 on public LB
-- DB/app firewall rules restrict source to specific CIDR/security group
-- Private subnets route through NAT (not IGW)
-- Private endpoints for high-traffic cloud service calls
+Verification: no inbound `0.0.0.0/0` except public LB 80/443; DB/app rules restrict source to specific CIDR/SG; private subnets route through NAT; private endpoints for high-traffic service calls.
 
-## SECURITY-08: APPLICATION_ACCESS_CONTROL
+## SECURITY-08: Application-Level Access Control
 
-[REQ] Every endpoint accessing/mutating resources:
-- Deny by default: all routes require auth unless explicitly public
-- Object-level authorization: verify caller owns/has permission for resource ID (prevent IDOR)
-- Function-level authorization: admin/privileged ops check role server-side
-- CORS: restricted to allowed origins (no `*` on authenticated endpoints)
-- Token validation: JWTs/sessions validated server-side every request (signature, expiration, audience, issuer)
+Rule: every endpoint accessing/mutating resources MUST enforce authorization: deny by default (all routes require auth unless explicitly public); object-level authorization (verify ownership/permission per resource ID — prevent IDOR); function-level authorization (admin/privileged ops check role server-side); CORS restricted to explicit origins (no `*` on authenticated endpoints); token validation server-side every request (signature, expiration, audience, issuer).
 
-Verification:
-- Every handler has auth middleware/guard
-- No endpoint returns data without verifying caller permission
-- Admin routes have explicit server-side role checks
-- CORS: no wildcard on authenticated endpoints
-- Token validation server-side every request
+Verification: every handler has auth middleware/guard; no endpoint returns data without verifying caller ownership; admin routes have server-side role checks; CORS no wildcard on authenticated endpoints; token validation server-side every request.
 
-## SECURITY-09: HARDENING_MISCONFIGURATION_PREVENTION
+## SECURITY-09: Security Hardening and Misconfiguration Prevention
 
-[REQ] All deployed components:
-- No default credentials before deployment
-- Remove/disable unused features, sample apps, doc endpoints
-- Production errors: no stack traces, internal paths, framework versions, DB details
-- Web servers: disable directory listing
-- Cloud storage: block public access unless documented exception
-- Runtime/frameworks/OS: current supported versions
+Rule: all deployed components MUST follow hardening baseline: no default credentials; minimal installation (remove unused features/samples); production errors no stack traces/internal paths/versions/DB details; disable directory listing; cloud storage block public access unless documented exception; current supported runtime/framework/OS versions.
 
-Verification:
-- No default credentials in config/env/IaC
-- Production error responses: generic messages only
-- Cloud storage: public access blocked unless documented
-- No sample/demo apps deployed
-- Current supported versions
+Verification: no default credentials in config/env/IaC; production errors return generic messages; cloud storage public access blocked unless documented; no sample/demo apps deployed; current supported versions.
 
-## SECURITY-10: SUPPLY_CHAIN_SECURITY
+## SECURITY-10: Software Supply Chain Security
 
-[REQ] Every project:
-- Dependency pinning: exact versions or lock files
-- Vulnerability scanning configured
-- No unused dependencies
-- Trusted sources only: official/verified registries
-- SBOM for production deployments
-- CI/CD integrity: pinned tool versions, verified base images (no `latest` in production)
+Rule: dependency pinning (exact versions/lock files); vulnerability scanner configured; no unused dependencies; trusted sources only (official/verified registries); SBOM for production; CI/CD pinned tool versions + verified base images (no `latest` tags in production).
 
-Verification:
-- Lock file committed
-- Vulnerability scanning in CI/CD or documented
-- No unused/abandoned dependencies
-- No `latest`/unpinned image tags in production
-- Official/verified registry sources
+Verification: lock file committed; vulnerability scanning in CI/CD or documented; no unused/abandoned deps; no `latest`/unpinned image tags in production; official/verified registries.
 
-## SECURITY-11: SECURE_DESIGN_PRINCIPLES
+## SECURITY-11: Secure Design Principles
 
-[REQ] Application design:
-- Separation of concerns: security-critical logic (auth, authz, payments) in dedicated modules
-- Defense in depth: layer controls (validation + authorization + encryption)
-- Rate limiting on public-facing endpoints
-- Design addresses misuse cases, not just happy-path
+Rule: separation of concerns (security-critical logic in dedicated modules); defense in depth (layer controls); rate limiting on public-facing endpoints; design considers misuse cases.
 
-Verification:
-- Security logic encapsulated in dedicated modules/services
-- Rate limiting on public APIs
-- Design docs address at least one misuse/abuse scenario
+Verification: security logic encapsulated in dedicated modules/services; rate limiting on public APIs; design docs address at least one misuse/abuse scenario.
 
-## SECURITY-12: AUTHENTICATION_CREDENTIAL_MANAGEMENT
+## SECURITY-12: Authentication and Credential Management
 
-[REQ] Every app with user auth:
-- Password policy: min 8 chars, check against breached lists
-- Credential storage: adaptive hashing algorithms (never weak/non-adaptive)
-- MFA: supported for admin accounts, should be available for all users
-- Session management: server-side expiration, invalidated on logout, secure/httpOnly/sameSite cookies
-- Brute-force protection: lockout, progressive delays, or CAPTCHA
-- No hardcoded credentials: use secrets manager
+Rule: password policy (min 8 chars, check breached lists); credential storage (adaptive hashing algorithms); MFA (MUST for admin, SHOULD for all); session management (server-side expiration, invalidate on logout, secure/httpOnly/sameSite cookies); brute-force protection (lockout/delay/CAPTCHA); no hardcoded credentials (use secrets manager).
 
-Verification:
-- Adaptive password hashing
-- Session cookies: `Secure`, `HttpOnly`, `SameSite`
-- Brute-force protection on login
-- No hardcoded credentials in source/config
-- MFA for admin accounts
-- Sessions invalidated on logout with defined expiration
+Verification: adaptive password hashing; session cookies set Secure + HttpOnly + SameSite; brute-force protection on login; no hardcoded credentials; MFA for admin; sessions invalidated on logout with defined expiration.
 
-## SECURITY-13: SOFTWARE_DATA_INTEGRITY
+## SECURITY-13: Software and Data Integrity Verification
 
-[REQ] Systems verify integrity:
-- Deserialization safety: no untrusted deserialization without validation (safe libraries/allowlists)
-- Artifact integrity: verify downloads via checksums/signatures
-- CI/CD pipeline security: restrict pipeline definition modification, separate code authors from deployment approvers
-- CDN/external resources: SRI hashes
-- Data integrity: critical modifications auditable (who, what, when)
+Rule: deserialization safety (no untrusted deserialization without validation); artifact integrity (checksums/signatures for deps/plugins/updates); CI/CD pipeline security (restrict pipeline definition modification, separate code authors/deployment approvers); CDN/external resources use SRI hashes; critical data modifications auditable (who, what, when).
 
-Verification:
-- No unsafe deserialization of untrusted input
-- External scripts include SRI integrity attributes
-- CI/CD definitions access-controlled and auditable
-- Critical data changes logged with actor, timestamp, before/after
+Verification: no unsafe deserialization of untrusted input; external scripts include SRI; CI/CD definitions access-controlled + auditable; critical data changes logged with actor + timestamp + before/after.
 
-## SECURITY-14: ALERTING_AND_MONITORING
+## SECURITY-14: Alerting and Monitoring
 
-[REQ] Beyond logging (SECURITY-02, SECURITY-03):
-- Security event alerting: repeated auth failures, privilege escalation, unusual access locations, authz failures
-- Log integrity: append-only/tamper-evident storage; app code cannot delete/modify own audit logs
-- Log retention: min period per compliance (default 90 days)
-- Monitoring dashboard/alarm config for key operational + security metrics
+Rule: security event alerting (repeated auth failures, privilege escalation, unusual access, authorization failures); log integrity (append-only/tamper-evident, app MUST NOT delete/modify own audit logs); log retention (min 90 days default); monitoring dashboard/alarm config for key metrics.
 
-Verification:
-- Alerting for auth failures and authz violations
-- Log retention policies set (min 90 days)
-- App roles cannot delete own log groups/streams
-- Security events generate alerts
+Verification: alerting for auth failures + authorization violations; log retention >= 90 days; app roles cannot delete own log groups; security events generate alerts.
 
-## SECURITY-15: EXCEPTION_HANDLING_FAIL_SAFE
+## SECURITY-15: Exception Handling and Fail-Safe Defaults
 
-[REQ] Every application:
-- Catch and handle: all external calls (DB, API, file I/O) have explicit error handling
-- Fail closed: on error, deny access/halt operation (never fail open)
-- Resource cleanup: error paths release resources (try/finally, using, equivalent)
-- User-facing errors: generic messages only
-- Global error handler: catches unhandled exceptions, logs per SECURITY-03, returns safe response
+Rule: catch and handle all external calls (DB, API, file I/O); fail closed (deny/halt on error, never fail open); resource cleanup on error paths (try/finally, using, equivalent); user-facing errors generic (no internal details); global error handler catches unhandled exceptions + logs per SECURITY-03 + returns safe response.
 
-Verification:
-- All external calls have explicit error handling
-- Global error handler at app entry point
-- Error paths do not bypass auth/validation (fail closed)
-- Resources cleaned up in error paths
-- No unhandled promise rejections/uncaught exceptions
+Verification: all external calls have explicit error handling; global error handler at entry point; error paths don't bypass auth/validation (fail closed); resources cleaned up on error; no unhandled promise rejections/uncaught exceptions.
 
 ## ENFORCEMENT_INTEGRATION
 
-At each stage:
-- Evaluate all SECURITY rule verification criteria against produced artifacts
-- Include "Security Compliance" section in stage completion: each rule as compliant, non-compliant, or N/A
-- non-compliant → blocking finding → follow blocking behavior
-- Include security rule references in design docs and test instructions
+Cross-cutting at every stage: evaluate all SECURITY verification criteria against artifacts; include "Security Compliance" section in completion summary (compliant/non-compliant/N/A per rule); non-compliant → blocking finding; include security rule references in design docs + test instructions.
 
 ## OWASP_REFERENCE_MAPPING
 

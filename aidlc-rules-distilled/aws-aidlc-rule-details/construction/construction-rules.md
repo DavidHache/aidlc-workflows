@@ -1,59 +1,30 @@
+# CONSTRUCTION RULES
+
+PATTERN:COLLECT_ANSWERS = wait for all [Answer]: completed; [REQ] review ALL for vague/ambiguous; [REQ] follow up ANY unclear; watch: "depends", "maybe", "not sure", "mix of", "somewhere between"; block until resolved
+
+PATTERN:APPROVAL_GATE = wait for explicit approval; changes requested → update, re-approve; log approval+response in audit.md with timestamp; mark stage complete in aidlc-state.md
+
+---
+
 ## FUNCTIONAL_DESIGN
 
-Purpose: detailed business logic design per unit (technology-agnostic, no infrastructure concerns). Builds on Application Design from INCEPTION.
+Purpose: detailed business logic design per unit, technology-agnostic. Builds on Application Design.
+Prerequisites: Units Generation complete, unit-of-work artifacts available, execution plan indicates execute
 
-Prerequisites: Units Generation complete, unit-of-work artifacts available, Application Design recommended, execution plan indicates stage should execute.
-
-### Steps
-
-1. Analyze Unit Context
-   - Read unit definition from `aidlc-docs/inception/application-design/unit-of-work.md`
-   - Read assigned stories from `aidlc-docs/inception/application-design/unit-of-work-story-map.md`
-   - Understand unit responsibilities and boundaries
-
-2. Create Functional Design Plan
-   - Generate plan with checkboxes [] for functional design
-   - Focus on business logic, domain models, business rules
-
-3. Generate Context-Appropriate Questions
-   - [REQ] Thoroughly analyze unit definition and functional design artifacts to identify ALL areas needing clarification
-   - [REQ] Default to asking questions when ANY ambiguity exists
-   - EMBED questions using [Answer]: tag format
-   - Question categories to consider (evaluate ALL):
-     - Business Logic Modeling: core entities, workflows, data transformations, business processes
-     - Domain Model: domain concepts, entity relationships, data structures, business objects
-     - Business Rules: decision rules, validation logic, constraints, business policies
-     - Data Flow: data inputs, outputs, transformations, persistence requirements
-     - Integration Points: external system interactions, APIs, data exchange
-     - Error Handling: error scenarios, validation failures, exception handling
-     - Business Scenarios: edge cases, alternative flows, complex situations
-     - Frontend Components (if applicable): UI component structure, user interactions, state management, form handling
-
-4. Store Plan
-   - Save as `aidlc-docs/construction/plans/{unit-name}-functional-design-plan.md`
-   - Include all [Answer]: tags
-
-5. Collect and Analyze Answers
-   - Wait for user to complete all [Answer]: tags
-   - [REQ] Review ALL responses for vague/ambiguous answers
-   - [REQ] Add follow-up questions for ANY unclear responses
-   - Look for: "depends", "maybe", "not sure", "mix of", "somewhere between"
-   - Create clarification questions file if ANY ambiguities detected
-   - Do not proceed until ALL ambiguities resolved
-
-6. Generate Functional Design Artifacts
-   - Create `aidlc-docs/construction/{unit-name}/functional-design/business-logic-model.md`
-   - Create `aidlc-docs/construction/{unit-name}/functional-design/business-rules.md`
-   - Create `aidlc-docs/construction/{unit-name}/functional-design/domain-entities.md`
-   - [COND] unit includes frontend/UI → Create `aidlc-docs/construction/{unit-name}/functional-design/frontend-components.md` with: component hierarchy/structure, props/state definitions, user interaction flows, form validation rules, API integration points
-
-7. Present Completion Message
+1. Read `aidlc-docs/inception/application-design/unit-of-work.md`, `unit-of-work-story-map.md`; understand unit boundaries
+2. Generate plan with [] checkboxes; focus: business logic, domain models, business rules
+3. [REQ] Analyze unit definition for ALL ambiguities; [REQ] default to asking when ANY ambiguity; EMBED [Answer]: tags
+   Categories (evaluate ALL): Business Logic Modeling (entities, workflows, transformations, processes), Domain Model (concepts, relationships, structures, objects), Business Rules (decisions, validation, constraints, policies), Data Flow (inputs, outputs, transformations, persistence), Integration Points (external systems, APIs, exchange), Error Handling (error scenarios, validation failures, exceptions), Business Scenarios (edge cases, alternative flows), Frontend Components [COND frontend] (component structure, interactions, state, forms)
+4. Save → `aidlc-docs/construction/plans/{unit-name}-functional-design-plan.md` with [Answer]: tags
+5. [PATTERN:COLLECT_ANSWERS]
+6. Create in `aidlc-docs/construction/{unit-name}/functional-design/`: business-logic-model.md, business-rules.md, domain-entities.md; [COND] frontend/UI → frontend-components.md (hierarchy, props/state, interaction flows, form validation, API integration)
+7. Present completion message:
 
 ```markdown
 # 🔧 Functional Design Complete - [unit-name]
 ```
 
-   Optional AI summary: structured bullet-point summary of functional design (business logic models, entities, business rules, domain model structure). No workflow instructions.
+   AI summary (optional): bullet-point summary of business logic models, entities, rules, domain structure. No workflow instructions.
 
 ```markdown
 > **📋 <u>**REVIEW REQUIRED:**</u>**  
@@ -71,66 +42,29 @@ Prerequisites: Units Generation complete, unit-of-work artifacts available, Appl
 ---
 ```
 
-8. Wait for Explicit Approval
-   - Do not proceed until explicit unambiguous approval
-   - changes requested → update design, repeat approval
+8. [PATTERN:APPROVAL_GATE]
 
-9. Record Approval and Update Progress
-   - Log approval in audit.md with timestamp
-   - Record user approval response with timestamp
-   - Mark Functional Design complete in aidlc-state.md
+---
 
 ## NFR_REQUIREMENTS
 
-Prerequisites: Functional Design complete for unit, functional design artifacts available, execution plan indicates stage should execute.
+Purpose: NFR requirements + tech stack choices per unit
+Prerequisites: Functional Design complete, artifacts available, execution plan indicates execute
 
-Purpose: determine non-functional requirements for unit, make tech stack choices.
-
-### Steps
-
-1. Analyze Functional Design
-   - Read from `aidlc-docs/construction/{unit-name}/functional-design/`
-   - Understand business logic complexity and requirements
-
-2. Create NFR Requirements Plan
-   - Generate plan with checkboxes [] for NFR assessment
-   - Focus on scalability, performance, availability, security
-
-3. Generate Context-Appropriate Questions
-   - [REQ] Thoroughly analyze functional design to identify ALL areas where NFR clarification improves quality
-   - [REQ] Default to asking questions when ANY ambiguity exists
-   - EMBED questions using [Answer]: tag format
-   - Question categories to evaluate (consider ALL):
-     - Scalability Requirements: expected load, growth patterns, scaling triggers, capacity planning
-     - Performance Requirements: response times, throughput, latency, benchmarks
-     - Availability Requirements: uptime, disaster recovery, failover, business continuity
-     - Security Requirements: data protection, compliance, authentication, authorization, threat models
-     - Tech Stack Selection: technology preferences, constraints, existing systems, integration
-     - Reliability Requirements: error handling, fault tolerance, monitoring, alerting
-     - Maintainability Requirements: code quality, documentation, testing, operational requirements
-     - Usability Requirements: user experience, accessibility, interface requirements
-
-4. Store Plan
-   - Save as `aidlc-docs/construction/plans/{unit-name}-nfr-requirements-plan.md`
-
-5. Collect and Analyze Answers
-   - Wait for all [Answer]: tags completed
-   - [REQ] Review ALL responses for vague/ambiguous answers
-   - [REQ] Follow-up for ANY unclear responses
-   - Look for: "depends", "maybe", "not sure", "mix of", "somewhere between", "standard", "typical"
-   - Do not proceed until ALL ambiguities resolved
-
-6. Generate NFR Requirements Artifacts
-   - Create `aidlc-docs/construction/{unit-name}/nfr-requirements/nfr-requirements.md`
-   - Create `aidlc-docs/construction/{unit-name}/nfr-requirements/tech-stack-decisions.md`
-
-7. Present Completion Message
+1. Read `aidlc-docs/construction/{unit-name}/functional-design/`; understand business logic complexity
+2. Generate plan with [] checkboxes; focus: scalability, performance, availability, security
+3. [REQ] Analyze functional design for ALL ambiguities; [REQ] default to asking when ANY ambiguity; EMBED [Answer]: tags
+   Categories (evaluate ALL): Scalability Requirements (load, growth, scaling triggers, capacity), Performance Requirements (response times, throughput, latency, benchmarks), Availability Requirements (uptime, DR, failover, continuity), Security Requirements (data protection, compliance, auth, threat models), Tech Stack Selection (preferences, constraints, existing systems, integration), Reliability Requirements (error handling, fault tolerance, monitoring, alerting), Maintainability Requirements (code quality, documentation, testing, ops), Usability Requirements (UX, accessibility, interface)
+4. Save → `aidlc-docs/construction/plans/{unit-name}-nfr-requirements-plan.md` with [Answer]: tags
+5. [PATTERN:COLLECT_ANSWERS]
+6. Create in `aidlc-docs/construction/{unit-name}/nfr-requirements/`: nfr-requirements.md, tech-stack-decisions.md
+7. Present completion message:
 
 ```markdown
 # 📊 NFR Requirements Complete - [unit-name]
 ```
 
-   Optional AI summary: structured bullet-point summary (scalability, performance, availability, security, compliance, tech stack decisions). No workflow instructions.
+   AI summary (optional): bullet-point summary of scalability, performance, availability, security requirements + tech stack decisions. No workflow instructions.
 
 ```markdown
 > **📋 <u>**REVIEW REQUIRED:**</u>**  
@@ -148,52 +82,29 @@ Purpose: determine non-functional requirements for unit, make tech stack choices
 ---
 ```
 
-8. Wait for Explicit Approval
-9. Record Approval and Update Progress (audit.md + aidlc-state.md)
+8. [PATTERN:APPROVAL_GATE]
 
+---
 
 ## NFR_DESIGN
 
-Prerequisites: NFR Requirements complete for unit, NFR requirements artifacts available, execution plan indicates stage should execute.
+Purpose: incorporate NFR requirements into unit design using patterns + logical components
+Prerequisites: NFR Requirements complete, artifacts available, execution plan indicates execute
 
-Purpose: incorporate NFR requirements into unit design using patterns and logical components.
-
-### Steps
-
-1. Analyze NFR Requirements
-   - Read from `aidlc-docs/construction/{unit-name}/nfr-requirements/`
-   - Understand scalability, performance, availability, security needs
-
-2. Create NFR Design Plan
-   - Generate plan with checkboxes [] for NFR design
-   - Focus on design patterns and logical components
-
-3. Generate Context-Appropriate Questions
-   - Analyze NFR requirements to generate ONLY questions relevant to THIS unit's NFR design
-   - Categories as inspiration, not mandatory checklist. Skip if not applicable:
-     - Resilience Patterns: fault tolerance approach
-     - Scalability Patterns: scaling mechanisms
-     - Performance Patterns: optimization strategy
-     - Security Patterns: security implementation approach
-     - Logical Components: infrastructure components (queues, caches, etc.)
-
-4. Store Plan
-   - Save as `aidlc-docs/construction/plans/{unit-name}-nfr-design-plan.md`
-
-5. Collect and Analyze Answers
-   - Wait for all [Answer]: tags, review for ambiguities, follow up if needed
-
-6. Generate NFR Design Artifacts
-   - Create `aidlc-docs/construction/{unit-name}/nfr-design/nfr-design-patterns.md`
-   - Create `aidlc-docs/construction/{unit-name}/nfr-design/logical-components.md`
-
-7. Present Completion Message
+1. Read `aidlc-docs/construction/{unit-name}/nfr-requirements/`; understand scalability, performance, availability, security needs
+2. Generate plan with [] checkboxes; focus: design patterns, logical components
+3. [REQ] Analyze NFR requirements for ambiguities; EMBED [Answer]: tags; generate ONLY relevant questions
+   Example categories (adapt, skip if N/A): Resilience Patterns, Scalability Patterns, Performance Patterns, Security Patterns, Logical Components (queues, caches, etc.)
+4. Save → `aidlc-docs/construction/plans/{unit-name}-nfr-design-plan.md` with [Answer]: tags
+5. [PATTERN:COLLECT_ANSWERS]
+6. Create in `aidlc-docs/construction/{unit-name}/nfr-design/`: nfr-design-patterns.md, logical-components.md
+7. Present completion message:
 
 ```markdown
 # 🎨 NFR Design Complete - [unit-name]
 ```
 
-   Optional AI summary: design patterns, logical components, resilience/scalability/performance patterns. No workflow instructions.
+   AI summary (optional): bullet-point summary of design patterns, logical components, resilience/scalability/performance patterns. No workflow instructions.
 
 ```markdown
 > **📋 <u>**REVIEW REQUIRED:**</u>**  
@@ -211,54 +122,29 @@ Purpose: incorporate NFR requirements into unit design using patterns and logica
 ---
 ```
 
-8. Wait for Explicit Approval
-9. Record Approval and Update Progress (audit.md + aidlc-state.md)
+8. [PATTERN:APPROVAL_GATE]
+
+---
 
 ## INFRASTRUCTURE_DESIGN
 
-Prerequisites: Functional Design complete, NFR Design recommended, execution plan indicates stage should execute.
+Purpose: map logical components to actual infrastructure for deployment
+Prerequisites: Functional Design complete, NFR Design recommended, execution plan indicates execute
 
-Purpose: map logical software components to actual infrastructure choices for deployment.
-
-### Steps
-
-1. Analyze Design Artifacts
-   - Read functional design from `aidlc-docs/construction/{unit-name}/functional-design/`
-   - Read NFR design from `aidlc-docs/construction/{unit-name}/nfr-design/` (if exists)
-   - Identify logical components needing infrastructure
-
-2. Create Infrastructure Design Plan
-   - Generate plan with checkboxes [] for infrastructure design
-   - Focus on mapping to actual services (AWS, Azure, GCP, on-premise)
-
-3. Generate Context-Appropriate Questions
-   - Generate ONLY questions relevant to THIS unit's infrastructure needs
-   - Categories as inspiration, not mandatory checklist. Skip if not applicable:
-     - Deployment Environment: cloud provider, environment setup
-     - Compute Infrastructure: compute service choice
-     - Storage Infrastructure: database/storage selection
-     - Messaging Infrastructure: messaging/queuing services
-     - Networking Infrastructure: load balancing, API gateway
-     - Monitoring Infrastructure: observability tooling
-     - Shared Infrastructure: infrastructure sharing strategy
-
-4. Store Plan
-   - Save as `aidlc-docs/construction/plans/{unit-name}-infrastructure-design-plan.md`
-
-5. Collect and Analyze Answers
-
-6. Generate Infrastructure Design Artifacts
-   - Create `aidlc-docs/construction/{unit-name}/infrastructure-design/infrastructure-design.md`
-   - Create `aidlc-docs/construction/{unit-name}/infrastructure-design/deployment-architecture.md`
-   - [COND] shared infrastructure → Create `aidlc-docs/construction/shared-infrastructure.md`
-
-7. Present Completion Message
+1. Load `aidlc-docs/construction/{unit-name}/functional-design/`, `nfr-design/` (if exists); identify components needing infrastructure
+2. Generate plan with [] checkboxes; focus: mapping to actual services (AWS, Azure, GCP, on-premise)
+3. [REQ] Analyze functional + NFR design for infrastructure ambiguities; EMBED [Answer]: tags; generate ONLY relevant questions
+   Example categories (adapt, skip if N/A): Deployment Environment, Compute Infrastructure, Storage Infrastructure, Messaging Infrastructure, Networking Infrastructure, Monitoring Infrastructure, Shared Infrastructure
+4. Save → `aidlc-docs/construction/plans/{unit-name}-infrastructure-design-plan.md` with [Answer]: tags
+5. [PATTERN:COLLECT_ANSWERS]
+6. Create `aidlc-docs/construction/{unit-name}/infrastructure-design/`: infrastructure-design.md, deployment-architecture.md; [COND] shared infra → `aidlc-docs/construction/shared-infrastructure.md`
+7. Present completion message:
 
 ```markdown
 # 🏢 Infrastructure Design Complete - [unit-name]
 ```
 
-   Optional AI summary: infrastructure services, deployment architecture, cloud provider choices. No workflow instructions.
+   AI summary (optional): bullet-point summary of infrastructure services, deployment architecture, cloud provider choices. No workflow instructions.
 
 ```markdown
 > **📋 <u>**REVIEW REQUIRED:**</u>**  
@@ -276,107 +162,58 @@ Purpose: map logical software components to actual infrastructure choices for de
 ---
 ```
 
-8. Wait for Explicit Approval
-9. Record Approval and Update Progress (audit.md + aidlc-state.md)
+8. [PATTERN:APPROVAL_GATE]
+
+---
 
 ## CODE_GENERATION
 
 Two parts: Part 1 Planning, Part 2 Generation.
-For brownfield: "generate" means modify existing files when appropriate, not create duplicates.
-
-Prerequisites: Unit Design complete, NFR Implementation (if executed) complete, all unit design artifacts available.
+Brownfield: "generate" means modify existing files when appropriate, not create duplicates.
+Prerequisites: unit design complete, NFR (if executed) complete, all design artifacts available
 
 ### PART 1: PLANNING
 
-1. Analyze Unit Context
-   - Read unit design artifacts
-   - Read unit story map for assigned stories
-   - Identify dependencies and interfaces
-   - Validate unit ready for code generation
-
-2. Create Detailed Unit Code Generation Plan
-   - Read workspace root and project type from `aidlc-docs/aidlc-state.md`
-   - Determine code location (see Critical Rules for structure patterns)
-   - Brownfield: review reverse engineering code-structure.md for existing files to modify
-   - Document exact paths (never aidlc-docs/)
-   - Create explicit steps for unit generation:
-     1. Project Structure Setup (greenfield only)
-     2. Business Logic Generation
-     3. Business Logic Unit Testing
-     4. Business Logic Summary
-     5. API Layer Generation
-     6. API Layer Unit Testing
-     7. API Layer Summary
-     8. Repository Layer Generation
-     9. Repository Layer Unit Testing
-     10. Repository Layer Summary
-     11. Frontend Components Generation (if applicable)
-     12. Frontend Components Unit Testing (if applicable)
-     13. Frontend Components Summary (if applicable)
-     14. Database Migration Scripts (if data models exist)
-     15. Documentation Generation (API docs, README updates)
-     16. Deployment Artifacts Generation
-   - Number each step sequentially
-   - Include story mapping references
-   - Add checkboxes [] for each step
-
-3. Include Unit Generation Context
-   - Stories implemented by this unit
-   - Dependencies on other units/services
-   - Expected interfaces and contracts
-   - Database entities owned by this unit
-   - Service boundaries and responsibilities
-
-4. Create Unit Plan Document
-   - Save as `aidlc-docs/construction/plans/{unit-name}-code-generation-plan.md`
-   - Include step numbering, unit context, dependencies, story traceability
-   - This plan is single source of truth for Code Generation
-
-5. Summarize Unit Plan
-   - Provide summary to user: generation approach, step sequence, story coverage, total steps, estimated scope
-
-6. Log Approval Prompt
-   - Log prompt with timestamp in `aidlc-docs/audit.md`
-
-7. Wait for Explicit Approval
-   - Do not proceed until user approves entire plan
-
-8. Record Approval Response
-   - Log in `aidlc-docs/audit.md` with timestamp
-
-9. Update Progress
-   - Mark Code Planning complete in `aidlc-state.md`
+1. Read unit design artifacts, unit story map; identify dependencies + interfaces; validate readiness
+2. Read workspace root + project type from `aidlc-docs/aidlc-state.md`; determine code location (see Critical Rules); [COND brownfield] review code-structure.md for existing files; document exact paths (never aidlc-docs/)
+3. Create explicit numbered steps with [] checkboxes for:
+   - Project Structure Setup (greenfield only)
+   - Business Logic Generation
+   - Business Logic Unit Testing
+   - Business Logic Summary
+   - API Layer Generation
+   - API Layer Unit Testing
+   - API Layer Summary
+   - Repository Layer Generation
+   - Repository Layer Unit Testing
+   - Repository Layer Summary
+   - Frontend Components Generation (if applicable)
+   - Frontend Components Unit Testing (if applicable)
+   - Frontend Components Summary (if applicable)
+   - Database Migration Scripts (if data models exist)
+   - Documentation Generation (API docs, README updates)
+   - Deployment Artifacts Generation
+4. Include unit context: stories, dependencies, interfaces, DB entities, service boundaries
+5. Save → `aidlc-docs/construction/plans/{unit-name}-code-generation-plan.md` with step numbering, unit context, story traceability; emphasize plan = single source of truth
+6. Summarize plan to user: generation approach, step sequence, story coverage, total steps, estimated scope
+7. Log approval prompt in `aidlc-docs/audit.md` with timestamp + plan reference
+8. Wait for explicit approval of entire plan; changes requested → update + re-approve
+9. Log approval response in `aidlc-docs/audit.md` with exact user response + timestamp
+10. Mark Code Planning complete in `aidlc-state.md`
 
 ### PART 2: GENERATION
 
-10. Load Unit Code Generation Plan
-    - Read from `aidlc-docs/construction/plans/{unit-name}-code-generation-plan.md`
-    - Identify next uncompleted step (first [] checkbox)
-
-11. Execute Current Step
-    - Verify target directory from plan (never aidlc-docs/)
-    - Brownfield: check if target file exists
-    - file exists → modify in-place (never create `ClassName_modified.java`, `ClassName_new.java`)
-    - file doesn't exist → create new
-    - Write locations: application code → workspace root, documentation → `aidlc-docs/construction/{unit-name}/code/` (markdown only), build/config → workspace root
-
-12. Update Progress
-    - Mark completed step [x] in plan
-    - Mark associated unit stories [x] when generation finished
-    - Update `aidlc-docs/aidlc-state.md`
-    - Brownfield: verify no duplicate files created
-
-13. Continue or Complete
-    - more steps → return to step 10
-    - all complete → present completion message
-
-14. Present Completion Message
+11. Read plan from `aidlc-docs/construction/plans/{unit-name}-code-generation-plan.md`; identify next uncompleted step (first [])
+12. Execute current step: verify target dir from plan (never aidlc-docs/); [COND brownfield] check if file exists → modify in-place (never create `ClassName_modified.java` etc.) | not exists → create new; write to correct locations (app code → workspace root, docs → `aidlc-docs/construction/{unit-name}/code/`, build/config → workspace root)
+13. Mark completed step [x] in plan; mark associated stories [x] when done; update `aidlc-state.md`; [COND brownfield] verify no duplicate files
+14. More steps → return to step 11 | all complete → present completion
+15. Present completion message:
 
 ```markdown
 # 💻 Code Generation Complete - [unit-name]
 ```
 
-   Optional AI summary: brownfield: distinguish modified vs created files. Greenfield: list created files with paths. List tests, docs, deployment artifacts. No workflow instructions.
+   AI summary (optional): [COND brownfield] distinguish modified vs created files; [COND greenfield] list created files with paths; list tests, docs, deployment artifacts. No workflow instructions.
 
 ```markdown
 > **📋 <u>**REVIEW REQUIRED:**</u>**  
@@ -396,75 +233,34 @@ Prerequisites: Unit Design complete, NFR Implementation (if executed) complete, 
 ---
 ```
 
-15. Wait for Explicit Approval
-16. Record Approval and Update Progress (audit.md + aidlc-state.md)
+16. [PATTERN:APPROVAL_GATE]
 
 ### Critical Rules
 
-Code Location:
-- Application code: workspace root only (NEVER aidlc-docs/)
-- Documentation: aidlc-docs/ only (markdown summaries)
-- Read workspace root from aidlc-state.md before generating
+Code location: app code → workspace root (NEVER aidlc-docs/); docs → aidlc-docs/ only; read workspace root from aidlc-state.md.
 
-Structure patterns by project type:
-- Brownfield: use existing structure (e.g., `src/main/java/`, `lib/`, `pkg/`)
-- Greenfield single unit: `src/`, `tests/`, `config/` in workspace root
-- Greenfield multi-unit (microservices): `{unit-name}/src/`, `{unit-name}/tests/`
-- Greenfield multi-unit (monolith): `src/{unit-name}/`, `tests/{unit-name}/`
+Structure patterns: brownfield → use existing structure; greenfield single unit → `src/`, `tests/`, `config/`; greenfield multi-unit microservices → `{unit-name}/src/`, `{unit-name}/tests/`; greenfield multi-unit monolith → `src/{unit-name}/`, `tests/{unit-name}/`.
 
-Brownfield File Modification:
-- Check if file exists before generating
-- exists → modify in-place (never create copies)
-- doesn't exist → create new
-- Verify no duplicate files after generation
+Brownfield rules: check file exists before generating; exists → modify in-place; not exists → create new; verify no duplicates after generation.
 
-Planning Phase:
-- Explicit numbered steps for all generation activities
-- Story traceability in plan
-- Document unit context and dependencies
-- Explicit user approval before generation
+Planning rules: explicit numbered steps, story traceability, document context + dependencies, explicit user approval before generation.
 
-Generation Phase:
-- NO HARDCODED LOGIC: only execute what plan says
-- FOLLOW PLAN EXACTLY: no deviation from step sequence
-- UPDATE CHECKBOXES: mark [x] immediately after each step
-- STORY TRACEABILITY: mark unit stories [x] when implemented
-- RESPECT DEPENDENCIES: only implement when dependencies satisfied
+Generation rules: [REQ] NO HARDCODED LOGIC (only execute plan); [REQ] FOLLOW PLAN EXACTLY; [REQ] UPDATE CHECKBOXES immediately; [REQ] STORY TRACEABILITY (mark stories [x]); [REQ] RESPECT DEPENDENCIES.
 
-Automation Friendly Code:
-- Add `data-testid` to interactive elements (buttons, inputs, links, forms)
-- Naming: `{component}-{element-role}` (e.g., `login-form-submit-button`)
-- No dynamic/auto-generated IDs that change between renders
-- Keep `data-testid` values stable across code changes
+Automation-friendly UI code: add `data-testid` to interactive elements; naming: `{component}-{element-role}`; avoid dynamic/auto-generated IDs; keep `data-testid` stable across changes.
 
-Completion Criteria:
-- Complete plan created and approved
-- All plan steps marked [x]
-- All unit stories implemented
-- All code and tests generated
-- Deployment artifacts generated
-- Unit ready for build and verification
+Completion criteria: plan created + approved, all steps [x], all stories implemented, all code + tests generated, deployment artifacts generated, unit ready for build.
 
+---
 
 ## BUILD_AND_TEST
 
-Purpose: build all units, execute comprehensive testing strategy.
+Purpose: build all units + execute comprehensive testing
+Prerequisites: Code Generation complete for all units, all code artifacts generated
 
-Prerequisites: Code Generation complete for all units, all code artifacts generated.
+1. Analyze testing requirements: unit tests (already generated per unit), integration tests, performance tests, end-to-end tests, contract tests, security tests
 
-### Steps
-
-1. Analyze Testing Requirements
-   - Unit tests: already generated per unit during code generation
-   - Integration tests: interactions between units/services
-   - Performance tests: load, stress, scalability
-   - End-to-end tests: complete user workflows
-   - Contract tests: API contract validation between services
-   - Security tests: vulnerability scanning, penetration testing
-
-2. Generate Build Instructions
-
-Create `aidlc-docs/construction/build-and-test/build-instructions.md`:
+2. Create `aidlc-docs/construction/build-and-test/build-instructions.md`:
 
 ```markdown
 # Build Instructions
@@ -478,22 +274,22 @@ Create `aidlc-docs/construction/build-and-test/build-instructions.md`:
 ## Build Steps
 
 ### 1. Install Dependencies
-\`\`\`bash
+```bash
 [Command to install dependencies]
 # Example: npm install, mvn dependency:resolve, pip install -r requirements.txt
-\`\`\`
+```
 
 ### 2. Configure Environment
-\`\`\`bash
+```bash
 [Commands to set up environment]
 # Example: export variables, configure credentials
-\`\`\`
+```
 
 ### 3. Build All Units
-\`\`\`bash
+```bash
 [Command to build all units]
 # Example: mvn clean install, npm run build, brazil-build
-\`\`\`
+```
 
 ### 4. Verify Build Success
 - **Expected Output**: [Describe successful build output]
@@ -511,9 +307,7 @@ Create `aidlc-docs/construction/build-and-test/build-instructions.md`:
 - **Solution**: [Step-by-step fix]
 ```
 
-3. Generate Unit Test Execution Instructions
-
-Create `aidlc-docs/construction/build-and-test/unit-test-instructions.md`:
+3. Create `aidlc-docs/construction/build-and-test/unit-test-instructions.md`:
 
 ```markdown
 # Unit Test Execution
@@ -521,10 +315,10 @@ Create `aidlc-docs/construction/build-and-test/unit-test-instructions.md`:
 ## Run Unit Tests
 
 ### 1. Execute All Unit Tests
-\`\`\`bash
+```bash
 [Command to run all unit tests]
 # Example: mvn test, npm test, pytest tests/unit
-\`\`\`
+```
 
 ### 2. Review Test Results
 - **Expected**: [X] tests pass, 0 failures
@@ -539,9 +333,7 @@ If tests fail:
 4. Rerun tests until all pass
 ```
 
-4. Generate Integration Test Instructions
-
-Create `aidlc-docs/construction/build-and-test/integration-test-instructions.md`:
+4. Create `aidlc-docs/construction/build-and-test/integration-test-instructions.md`:
 
 ```markdown
 # Integration Test Instructions
@@ -564,24 +356,24 @@ Test interactions between units/services to ensure they work together correctly.
 ## Setup Integration Test Environment
 
 ### 1. Start Required Services
-\`\`\`bash
+```bash
 [Commands to start services]
 # Example: docker-compose up, start test database
-\`\`\`
+```
 
 ### 2. Configure Service Endpoints
-\`\`\`bash
+```bash
 [Commands to configure endpoints]
 # Example: export API_URL=http://localhost:8080
-\`\`\`
+```
 
 ## Run Integration Tests
 
 ### 1. Execute Integration Test Suite
-\`\`\`bash
+```bash
 [Command to run integration tests]
 # Example: mvn integration-test, npm run test:integration
-\`\`\`
+```
 
 ### 2. Verify Service Interactions
 - **Test Scenarios**: [List key integration test scenarios]
@@ -589,15 +381,13 @@ Test interactions between units/services to ensure they work together correctly.
 - **Logs Location**: [Where to check logs]
 
 ### 3. Cleanup
-\`\`\`bash
+```bash
 [Commands to clean up test environment]
 # Example: docker-compose down, stop test services
-\`\`\`
+```
 ```
 
-5. Generate Performance Test Instructions (if applicable)
-
-Create `aidlc-docs/construction/build-and-test/performance-test-instructions.md`:
+5. [COND] Create `aidlc-docs/construction/build-and-test/performance-test-instructions.md`:
 
 ```markdown
 # Performance Test Instructions
@@ -614,10 +404,10 @@ Validate system performance under load to ensure it meets requirements.
 ## Setup Performance Test Environment
 
 ### 1. Prepare Test Environment
-\`\`\`bash
+```bash
 [Commands to set up performance testing]
 # Example: scale services, configure load balancers
-\`\`\`
+```
 
 ### 2. Configure Test Parameters
 - **Test Duration**: [X] minutes
@@ -627,16 +417,16 @@ Validate system performance under load to ensure it meets requirements.
 ## Run Performance Tests
 
 ### 1. Execute Load Tests
-\`\`\`bash
+```bash
 [Command to run load tests]
 # Example: jmeter -n -t test.jmx, k6 run script.js
-\`\`\`
+```
 
 ### 2. Execute Stress Tests
-\`\`\`bash
+```bash
 [Command to run stress tests]
 # Example: gradually increase load until failure
-\`\`\`
+```
 
 ### 3. Analyze Performance Results
 - **Response Time**: [Actual vs Expected]
@@ -653,16 +443,12 @@ If performance doesn't meet requirements:
 3. Rerun tests to validate improvements
 ```
 
-6. Generate Additional Test Instructions (as needed)
+6. [COND] Additional test instructions as needed:
+   - Contract tests (microservices) → `aidlc-docs/construction/build-and-test/contract-test-instructions.md`: API contract validation, consumer-driven contracts, schema validation
+   - Security tests → `aidlc-docs/construction/build-and-test/security-test-instructions.md`: vulnerability scanning, dependency security, auth testing, input validation
+   - E2E tests → `aidlc-docs/construction/build-and-test/e2e-test-instructions.md`: complete user workflows, cross-service scenarios, UI testing
 
-   Based on project requirements:
-   - Contract Tests (microservices): Create `aidlc-docs/construction/build-and-test/contract-test-instructions.md` (API contract validation, consumer-driven contracts, schema validation)
-   - Security Tests: Create `aidlc-docs/construction/build-and-test/security-test-instructions.md` (vulnerability scanning, dependency security, auth testing, input validation)
-   - End-to-End Tests: Create `aidlc-docs/construction/build-and-test/e2e-test-instructions.md` (complete user workflows, cross-service scenarios, UI testing)
-
-7. Generate Test Summary
-
-Create `aidlc-docs/construction/build-and-test/build-and-test-summary.md`:
+7. Create `aidlc-docs/construction/build-and-test/build-and-test-summary.md`:
 
 ```markdown
 # Build and Test Summary
@@ -709,10 +495,9 @@ Create `aidlc-docs/construction/build-and-test/build-and-test-summary.md`:
 [If failures]: Address failing tests and rebuild
 ```
 
-8. Update State Tracking
-   - Mark Build and Test complete in `aidlc-docs/aidlc-state.md`
+8. Update `aidlc-docs/aidlc-state.md`: mark Build and Test complete
 
-9. Present Results to User
+9. Present results:
 
 ```
 "🔨 Build and Test Complete!
@@ -738,9 +523,7 @@ Review the summary in aidlc-docs/construction/build-and-test/build-and-test-summ
 **Ready to proceed to Operations stage for deployment planning?""
 ```
 
-10. Log Interaction
-
-[REQ] Log in `aidlc-docs/audit.md`:
+10. [REQ] Log phase completion in `aidlc-docs/audit.md`:
 
 ```markdown
 ## Build and Test Stage
