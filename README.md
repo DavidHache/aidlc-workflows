@@ -581,6 +581,9 @@ Here's the general flow once an extension is enabled:
 
 The workflow currently ships with a baseline security extension. 
 
+> [!IMPORTANT]
+> The security extension rules are provided as a directional reference for building effective security rules within AI-DLC workflows. Each organization should build, customize, and thoroughly test their own security rules before deploying in production workflows.
+
 ```
 aws-aidlc-rule-details/
 └── extensions/
