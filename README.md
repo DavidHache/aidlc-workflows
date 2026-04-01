@@ -7,8 +7,8 @@ AI-DLC is an intelligent software development workflow that adapts to your needs
 
 ## Table of Contents
 
-- [Experimental: AI-Assisted Setup](#-experimental-ai-assisted-setup)
 - [Common](#common)
+- [Experimental: AI-Assisted Setup (Release Download)](#experimental-ai-assisted-setup-release-download)
 - [Platform-Specific Setup](#platform-specific-setup)
 - [Usage](#usage)
 - [Three-Phase Adaptive Workflow](#three-phase-adaptive-workflow)
@@ -21,22 +21,39 @@ AI-DLC is an intelligent software development workflow that adapts to your needs
 
 ---
 
-### Experimental: AI-Assisted Setup
+## Common
+
+1. Download the latest release zip from the [Releases page](../../releases/latest) to a folder **outside** your project directory (e.g., `~/Downloads`).
+2. Extract the zip. It contains an `aidlc-rules/` folder with two subdirectories:
+   - `aws-aidlc-rules/` — the core AI-DLC workflow rules
+   - `aws-aidlc-rule-details/` — detailed rules conditionally referenced by the core rules
+3. Follow the setup instructions for your coding agent and platform below.
+
+---
+
+### Experimental: AI-Assisted Setup (Release Download)
 
 > Instead of manually copying files, let your AI agent handle the setup. This is an experimental workflow — currently validated with Kiro, Claude code, Cursor, Antigravity.
+>
+> **Note:** This approach requires your agent to have shell access (e.g., Kiro, Claude Code, Cline). For agents without shell access, follow the [Common](#common) setup above.
 
-**Step 1** — Add AI-DLC as a git submodule in your project root:
-
-```bash
-git submodule add https://github.com/awslabs/aidlc-workflows.git .aidlc
-```
-
-**Step 2** — Paste this prompt into your AI agent:
+Paste this prompt into your AI agent:
 
 ```
 Set up AI-DLC in this project by doing the following:
 
-1. Create the appropriate rules/steering file for your IDE using the options below.
+1. Download the latest AI-DLC release:
+   - Use the GitHub API to find the latest release asset URL:
+     curl -sL https://api.github.com/repos/awslabs/aidlc-workflows/releases/latest \
+       | grep -o '"browser_download_url": *"[^"]*"' \
+       | head -1 \
+       | cut -d'"' -f4
+   - Download the zip from that URL to /tmp/aidlc-rules.zip
+   - Extract it: unzip -o /tmp/aidlc-rules.zip -d /tmp/aidlc-release
+   - Copy the aidlc-rules/ folder from the extracted contents into .aidlc at the project root
+   - Clean up: rm -rf /tmp/aidlc-rules.zip /tmp/aidlc-release
+
+2. Create the appropriate rules/steering file for your IDE using the options below.
    Pick the one that matches the agent you are running in:
 
    - Kiro IDE or Kiro CLI     → create `.kiro/steering/ai-dlc.md`
@@ -52,33 +69,18 @@ Set up AI-DLC in this project by doing the following:
    - GitHub Copilot           → create `.github/copilot-instructions.md`
    - Any other agent          → create `AGENTS.md`
 
-2. The file content should be:
+3. The file content should be:
    When the user invokes AI-DLC, read and follow
    `.aidlc/aidlc-rules/aws-aidlc-rules/core-workflow.md` to start the workflow.
 
-3. Add `.aidlc` to `.gitignore` unless I explicitly ask you not to.
+4. Add `.aidlc` to `.gitignore` unless I explicitly ask you not to.
 
-4. Confirm what file you created and that `.aidlc` is gitignored.
+5. Confirm what file you created and that `.aidlc` is gitignored.
 ```
 
-The agent will create the correct config file for your IDE and gitignore the submodule automatically.
+The agent will download the latest release, create the correct config file for your IDE, and gitignore the `.aidlc` directory automatically.
 
-**Updating AI-DLC** — To pull the latest rules:
-
-```bash
-git submodule update --remote .aidlc
-```
-
-
----
-
-## Common
-
-1. Download the latest release zip from the [Releases page](../../releases/latest) to a folder **outside** your project directory (e.g., `~/Downloads`).
-2. Extract the zip. It contains an `aidlc-rules/` folder with two subdirectories:
-   - `aws-aidlc-rules/` — the core AI-DLC workflow rules
-   - `aws-aidlc-rule-details/` — detailed rules conditionally referenced by the core rules
-3. Follow the setup instructions for your coding agent and platform below.
+**Updating AI-DLC** — Re-run the prompt above. The agent will download the latest release and overwrite the existing `.aidlc/` folder.
 
 ---
 
