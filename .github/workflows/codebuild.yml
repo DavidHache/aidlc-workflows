@@ -8,6 +8,7 @@ on:
     types:
       - labeled
       - opened
+      - ready_for_review
       - reopened
       - synchronize
       - unlabeled
@@ -20,29 +21,14 @@ on:
       - 'v*'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   CODEBUILD_PROJECT_NAME: ${{ vars.CODEBUILD_PROJECT_NAME || 'codebuild-project' }}
   LABEL_REMINDER_MARKER: rules-label-reminder
 
-permissions:
-  actions: none
-  attestations: none
-  checks: none
-  contents: none
-  deployments: none
-  discussions: none
-  id-token: none
-  issues: none
-  models: none
-  packages: none
-  pages: none
-  pull-requests: none
-  repository-projects: none
-  security-events: none
-  statuses: none
+permissions: {}
 
 jobs:
   label-reminder:
@@ -121,15 +107,20 @@ jobs:
           fi
 
   build:
+    # Fork PRs are skipped because they cannot access the repository secrets
+    # or OIDC credentials needed for AWS CodeBuild.
     if: >-
-      github.event_name != 'pull_request'
-      || contains(github.event.pull_request.labels.*.name, 'rules')
+      (github.event_name != 'pull_request'
+      || contains(github.event.pull_request.labels.*.name, 'rules'))
+      && (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
     environment: codebuild
 
     permissions:
       actions: write
       contents: write
       id-token: write # Required for OIDC token request to AWS STS
+      pull-requests: write # Required for posting trend report comments on PRs
 
     runs-on: ubuntu-latest
 
@@ -150,6 +141,7 @@ jobs:
           lookup-only: true
 
       - name: Configure AWS credentials
+        # env.ACT is set by the 'act' CLI tool for local testing
         if: ${{ !env.ACT && steps.cache-check.outputs.cache-hit != 'true' }}
         uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6.0.0
         with:
@@ -163,7 +155,7 @@ jobs:
       - name: Run CodeBuild
         if: steps.cache-check.outputs.cache-hit != 'true'
         id: codebuild
-        uses: aws-actions/aws-codebuild-run-build@d8279f349f3b1b84e834c30e47c20dcb8888b7e5 # v1.0.18
+        uses: aws-actions/aws-codebuild-run-build@7e46c3fa1c1f217e26a73712796b1f78938b534b # v1.0.19
         with:
           project-name: ${{ env.CODEBUILD_PROJECT_NAME }}
           source-version-override: ${{ github.sha }}
@@ -173,6 +165,7 @@ jobs:
               variables:
                 GH_TOKEN: ${{ github.token }}
                 GH_REF_NAME: ${{ github.ref_name }}
+                GH_HEAD_REF: ${{ github.head_ref }}
                 GH_EVENT_NAME: ${{ github.event_name }}
             phases:
               install:
@@ -190,7 +183,7 @@ jobs:
               build:
                 commands:
                   - DEFAULT_BRANCH=$(gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name' 2>/dev/null || echo "main")
-                  - CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "${GH_REF_NAME:-}")
+                  - CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "${GH_HEAD_REF:-${GH_REF_NAME:-}}")
                   - CURRENT_TAG=$(git describe --tags --exact-match 2>/dev/null || echo "")
                   - IS_RELEASE=$([[ -n "$CURRENT_TAG" ]] && echo "true" || echo "false")
                   - IS_PRE_RELEASE=$([[ "$CURRENT_BRANCH" == "$DEFAULT_BRANCH" ]] && echo "true" || echo "false")
@@ -333,6 +326,55 @@ jobs:
           unzip -l "$DOWNLOADS/evaluation.zip"
           unzip -l "$DOWNLOADS/trend.zip"
 
+      - name: Post trend report summary on PR
+        if: github.event_name == 'pull_request' && steps.cache-check.outputs.cache-hit != 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          DOWNLOADS="${ACT_CODEBUILD_DIR:-${GITHUB_WORKSPACE}/.codebuild/downloads}"
+          STAGING="$DOWNLOADS/trend-staging"
+          mkdir -p "$STAGING"
+
+          # Extract trend-report.md from trend.zip
+          unzip -j -o "$DOWNLOADS/trend.zip" "*/trend-report.md" -d "$STAGING" 2>/dev/null || true
+
+          if [[ ! -f "$STAGING/trend-report.md" ]]; then
+            echo "WARNING: trend-report.md not found in trend.zip — skipping PR comment"
+            exit 0
+          fi
+
+          # Extract just the Executive Summary section (Section A)
+          SUMMARY=$(sed -n '/^## A\. Executive Summary/,/^---$/p' "$STAGING/trend-report.md" | sed '$d')
+
+          if [[ -z "$SUMMARY" ]]; then
+            echo "WARNING: Could not extract executive summary — skipping PR comment"
+            exit 0
+          fi
+
+          MARKER="<!-- trend-report-comment -->"
+          BODY="${MARKER}
+          ${SUMMARY}
+
+          ---
+          *Full trend report available in the [workflow artifacts](https://github.com/${REPO}/actions/runs/${{ github.run_id }}).*"
+
+          # Update existing comment or create new one
+          EXISTING=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" \
+            --jq ".[] | select(.body | contains(\"$MARKER\")) | .id" \
+            | head -1)
+
+          if [[ -n "$EXISTING" ]]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$EXISTING" \
+              -f body="$BODY"
+            echo "Updated existing trend report comment ($EXISTING)"
+          else
+            gh pr comment "$PR_NUMBER" --repo "$REPO" --body "$BODY"
+            echo "Posted trend report comment on PR #$PR_NUMBER"
+          fi
+
       - name: Clean old report caches
         if: steps.cache-check.outputs.cache-hit != 'true'
         env:
@@ -353,6 +395,7 @@ jobs:
           key: ${{ env.CODEBUILD_PROJECT_NAME }}-${{ github.ref_name }}-${{ github.sha }}
 
       - name: Upload CodeBuild primary artifact
+        # env.ACT is set by the 'act' CLI tool for local testing
         if: ${{ !env.ACT }}
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
@@ -362,6 +405,7 @@ jobs:
           archive: false
 
       - name: Upload Evaluation Report
+        # env.ACT is set by the 'act' CLI tool for local testing
         if: ${{ !env.ACT }}
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
@@ -371,6 +415,7 @@ jobs:
           archive: false
 
       - name: Upload Trend Report
+        # env.ACT is set by the 'act' CLI tool for local testing
         if: ${{ !env.ACT }}
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
@@ -407,6 +452,7 @@ jobs:
           fi
 
       - name: Upload Report Bundle
+        # env.ACT is set by the 'act' CLI tool for local testing
         if: ${{ !env.ACT }}
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
