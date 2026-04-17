@@ -20,7 +20,7 @@ AI-DLC rules live in `aidlc-rules/aws-aidlc-rule-details/`. When contributing:
 
 The folder names `aws-aidlc-rules/` and `aws-aidlc-rule-details/` under `aidlc-rules/` are part of the public contract. Workshops, tests, and the `core-workflow.md` path-resolution logic all depend on these exact names. Do not flatten, rename, or reorganize them.
 
-```
+```text
 aidlc-rules/
 ├── aws-aidlc-rules/            # Core workflow entry point
 │   └── core-workflow.md
