@@ -43,7 +43,7 @@ AI-DLC is an intelligent software development workflow that adapts to your needs
 
 Paste this prompt into your AI agent:
 
-```
+```text
 Set up AI-DLC in this project by doing the following:
 
 1. Download the latest AI-DLC release:
